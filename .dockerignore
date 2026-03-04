@@ -9,3 +9,7 @@ Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
+/resources
+/package.json
+/vite.config.js
+/public/favicon.ico
