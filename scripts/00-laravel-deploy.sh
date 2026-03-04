@@ -17,3 +17,6 @@ php artisan route:cache
 
 echo "Optimizing autoloader..."
 composer dump-autoload --optimize --no-dev --classmap-authoritative
+
+echo "Running migrations..."
+php artisan migrate --force
