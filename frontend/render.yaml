@@ -1,0 +1,12 @@
+services:
+  # Next.js Frontend Service
+  - type: web
+    name: stockflow-frontend
+    env: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://stock-meuve.onrender.com
+    healthCheckPath: /
