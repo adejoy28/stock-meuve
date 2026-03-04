@@ -1,0 +1,374 @@
+### StockFlow API Tests
+### This file contains tests for all API endpoints in the StockFlow application
+
+@baseUrl = http://localhost:8000/api
+
+### Variables
+@productId = 40
+@shopId = 1
+@movementId = 1
+
+### ===== PRODUCTS ENDPOINTS =====
+
+### Get all Products
+GET {{baseUrl}}/products
+
+### Create new Product
+POST {{baseUrl}}/products
+Content-Type: application/json
+
+{
+  "name": "Malt 35cl",
+  "sku_code": "MLT-035",
+  "cost_price": 5200
+}
+
+### Create second Product
+POST {{baseUrl}}/products
+Content-Type: application/json
+
+{
+  "name": "Malt 50cl",
+  "sku_code": "MLT-050",
+  "cost_price": 5500
+}
+
+### Create third Product
+POST {{baseUrl}}/products
+Content-Type: application/json
+
+{
+  "name": "Energy Drink 25cl",
+  "sku_code": "EDR-025",
+  "cost_price": 3200
+}
+
+### Get specific Product (replace with actual ID)
+GET {{baseUrl}}/products/{{productId}}
+Content-Type: application/json
+
+### Update Product
+PUT {{baseUrl}}/products/{{productId}}
+Content-Type: application/json
+
+{
+  "name": "Malt 33cl Updated",
+  "sku_code": "MLT-033",
+  "cost_price": 4300
+}
+
+### Try to delete Product with movements (should fail)
+DELETE {{baseUrl}}/products/{{productId}}
+
+### ===== SHOPS ENDPOINTS =====
+
+### Get all shops
+GET {{baseUrl}}/shops
+
+### Create new shop
+POST {{baseUrl}}/shops
+Content-Type: application/json
+
+{
+  "name": "Shop A"
+}
+
+### Create second shop
+POST {{baseUrl}}/shops
+Content-Type: application/json
+
+{
+  "name": "Shop B"
+}
+
+### Get specific shop
+GET {{baseUrl}}/shops/{{shopId}}
+
+### Update shop name
+PUT {{baseUrl}}/shops/{{shopId}}
+Content-Type: application/json
+
+{
+  "name": "Shop A Updated"
+}
+
+### Archive shop (soft delete)
+DELETE {{baseUrl}}/shops/{{shopId}}
+
+### Get shops again (should not show archived)
+GET {{baseUrl}}/shops
+
+### ===== MOVEMENTS ENDPOINTS =====
+
+### Get all movements
+GET {{baseUrl}}/movements
+
+### Record opening stock for all Products
+POST {{baseUrl}}/movements/opening
+Content-Type: application/json
+
+{
+  "products": [
+    {"product_id": 1, "qty": 50},
+    {"product_id": 2, "qty": 30},
+    {"product_id": 3, "qty": 25}
+  ]
+}
+
+### Try to record opening stock again for same Product (should fail)
+POST {{baseUrl}}/movements/opening
+Content-Type: application/json
+
+{
+  "products": [
+    {"product_id": 1, "qty": 10}
+  ]
+}
+
+### Record goods receipt
+POST {{baseUrl}}/movements/receipt
+Content-Type: application/json
+
+{
+  "products": [
+    {"product_id": 1, "qty": 20},
+    {"product_id": 2, "qty": 15}
+  ],
+  "note": "Morning delivery from warehouse"
+}
+
+### Try to record receipt again same day (should fail)
+POST {{baseUrl}}/movements/receipt
+Content-Type: application/json
+
+{
+  "products": [
+    {"product_id": 1, "qty": 5}
+  ]
+}
+
+### Distribute to Shop A
+POST {{baseUrl}}/movements/distribution
+Content-Type: application/json
+
+{
+  "shop_id": 1,
+  "products": [
+    {"product_id": 1, "qty": 15},
+    {"product_id": 2, "qty": 10}
+  ],
+  "note": "Afternoon delivery"
+}
+
+### Try to distribute more than available balance (should fail)
+POST {{baseUrl}}/movements/distribution
+Content-Type: application/json
+
+{
+  "shop_id": 1,
+  "products": [
+    {"product_id": 1, "qty": 100}
+  ]
+}
+
+### Record correction entry
+POST {{baseUrl}}/movements/correction
+Content-Type: application/json
+
+{
+  "product_id": 1,
+  "qty": -2,
+  "shop_id": 1,
+  "note": "Found 2 damaged cartons during inventory check"
+}
+
+### Record spoil (pending)
+POST {{baseUrl}}/movements/spoil
+Content-Type: application/json
+
+{
+  "product_id": 1,
+  "qty": 3,
+  "reason": "damaged",
+  "note": "Broken during transport"
+}
+
+### Record another spoil (expired)
+POST {{baseUrl}}/movements/spoil
+Content-Type: application/json
+
+{
+  "product_id": 2,
+  "qty": 2,
+  "reason": "expired",
+  "note": "Past expiry date"
+}
+
+### Record third spoil (returned)
+POST {{baseUrl}}/movements/spoil
+Content-Type: application/json
+
+{
+  "product_id": 3,
+  "qty": 1,
+  "reason": "returned",
+  "note": "Customer returned damaged product"
+}
+
+### Get pending spoils
+GET {{baseUrl}}/movements?status=pending
+
+### Confirm a spoil
+PUT {{baseUrl}}/movements/spoil/1/confirm
+
+### Reject a spoil
+PUT {{baseUrl}}/movements/spoil/2/reject
+
+### Get all movements after confirm/reject
+GET {{baseUrl}}/movements
+
+### Filter movements by type
+GET {{baseUrl}}/movements?type=distribution
+
+### Filter movements by Product
+GET {{baseUrl}}/movements?product_id=1
+
+### Filter movements by shop
+GET {{baseUrl}}/movements?shop_id=1
+
+### Filter movements by date range
+GET {{baseUrl}}/movements?from=2026-03-04&to=2026-03-04
+
+### ===== REPORTS ENDPOINTS =====
+
+### Summary report - today
+GET {{baseUrl}}/reports/summary?period=today
+
+### Summary report - this week
+GET {{baseUrl}}/reports/summary?period=week
+
+### Summary report - this month
+GET {{baseUrl}}/reports/summary?period=month
+
+### Summary report - all time
+GET {{baseUrl}}/reports/summary?period=all
+
+### By-shop report - today
+GET {{baseUrl}}/reports/by-shop?period=today
+
+### By-shop report - all time
+GET {{baseUrl}}/reports/by-shop?period=all
+
+### By-product report - today
+GET {{baseUrl}}/reports/by-product?period=today
+
+### By-product report - all time
+GET {{baseUrl}}/reports/by-product?period=all
+
+### Spoils report - today
+GET {{baseUrl}}/reports/spoils?period=today
+
+### Spoils report - all time
+GET {{baseUrl}}/reports/spoils?period=all
+
+### ===== VERIFICATION ENDPOINTS =====
+
+### Check final Product balances
+GET {{baseUrl}}/products
+
+### Check shop totals
+GET {{baseUrl}}/shops
+
+### Get all movements for final verification
+GET {{baseUrl}}/movements
+
+### ===== ERROR HANDLING TESTS =====
+
+### Test validation error - missing required fields
+POST {{baseUrl}}/products
+Content-Type: application/json
+
+{
+  "sku_code": "INVALID"
+}
+
+### Test validation error - duplicate SKU code
+POST {{baseUrl}}/products
+Content-Type: application/json
+
+{
+  "name": "Duplicate SKU",
+  "sku_code": "MLT-033"
+}
+
+### Test 404 error - non-existent Product
+GET {{baseUrl}}/products/999
+
+### Test 404 error - non-existent movement
+PUT {{baseUrl}}/movements/spoil/999/confirm
+
+### ===== CLEANUP ENDPOINTS =====
+
+### (Optional) Delete test data - uncomment to use
+### DELETE {{baseUrl}}/products/3
+### DELETE {{baseUrl}}/shops/2
+
+### ===== PROFESSIONAL ERROR HANDLING EXAMPLES =====
+
+### 422 Validation Error Response Example
+# HTTP/1.1 422 Unprocessable Entity
+# Content-Type: application/json
+# {
+#   "status": "error",
+#   "message": "The given data was invalid.",
+#   "data": {
+#     "errors": {
+#       "name": ["The name field is required."],
+#       "sku_code": ["The sku code has already been taken."]
+#     }
+#   }
+# }
+
+### 409 Conflict Error Response Example
+# HTTP/1.1 409 Conflict
+# Content-Type: application/json
+# {
+#   "status": "error",
+#   "message": "Cannot delete Product with existing movements",
+#   "data": []
+# }
+
+### 500 Server Error Response Example
+# HTTP/1.1 500 Internal Server Error
+# Content-Type: application/json
+# {
+#   "status": "error",
+#   "message": "Something went wrong, please try again",
+#   "data": []
+# }
+
+### 404 Not Found Response Example
+# HTTP/1.1 404 Not Found
+# Content-Type: application/json
+# {
+#   "status": "error",
+#   "message": "The requested resource was not found.",
+#   "data": []
+# }
+
+### Success Response Example
+# HTTP/1.1 200 OK
+# Content-Type: application/json
+# {
+#   "status": "success",
+#   "message": "Products retrieved successfully.",
+#   "data": [
+#     {
+#       "id": 1,
+#       "name": "Malt 33cl",
+#       "sku_code": "MLT-033",
+#       "cost_price": 4200,
+#       "balance": 353
+#     }
+#   ]
+# }
