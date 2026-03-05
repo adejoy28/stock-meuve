@@ -18,7 +18,14 @@ use Illuminate\Http\Response;
 
 class ReceiptController extends Controller
 {
-    // Record goods receipt for multiple products
+    /**
+     * Record goods receipt
+     *
+     * Records goods receipt for multiple products. Only one receipt per day is allowed across all products.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([

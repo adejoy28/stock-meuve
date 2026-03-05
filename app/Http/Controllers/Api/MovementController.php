@@ -16,7 +16,14 @@ use Illuminate\Http\Request;
 
 class MovementController extends Controller
 {
-    // List movements (filterable)
+    /**
+     * List movements
+     *
+     * Returns a list of movements with optional filtering by type, product, shop, status, and date range.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function index(Request $request)
     {
         $query = Movement::with(['product', 'shop']);

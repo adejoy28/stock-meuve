@@ -18,7 +18,14 @@ use Illuminate\Http\Response;
 
 class OpeningStockController extends Controller
 {
-    // Record opening stock for multiple products
+    /**
+     * Record opening stock
+     *
+     * Records opening stock for multiple products. Only one opening stock entry per product per day is allowed.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([

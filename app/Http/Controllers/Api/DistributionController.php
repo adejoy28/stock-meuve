@@ -18,7 +18,14 @@ use Illuminate\Http\Response;
 
 class DistributionController extends Controller
 {
-    // Distribute products to a shop
+    /**
+     * Distribute products to shop
+     *
+     * Distributes products to a specific shop. Validates that sufficient balance exists before distribution.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([

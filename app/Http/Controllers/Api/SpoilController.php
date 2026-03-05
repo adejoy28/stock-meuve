@@ -16,7 +16,14 @@ use Illuminate\Http\Request;
 
 class SpoilController extends Controller
 {
-    // Record spoil (pending status)
+    /**
+     * Record spoil
+     *
+     * Records a spoil entry with pending status. Requires confirmation before affecting inventory balance.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -42,7 +49,14 @@ class SpoilController extends Controller
         ], 201);
     }
 
-    // Confirm a pending spoil
+    /**
+     * Confirm spoil
+     *
+     * Confirms a pending spoil entry, which will affect the inventory balance.
+     *
+     * @param \App\Models\Movement $movement
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function confirm(Movement $movement)
     {
         if ($movement->type !== 'spoil' || $movement->status !== 'pending') {
@@ -62,7 +76,14 @@ class SpoilController extends Controller
         ]);
     }
 
-    // Reject a pending spoil
+    /**
+     * Reject spoil
+     *
+     * Rejects a pending spoil entry, which will not affect the inventory balance.
+     *
+     * @param \App\Models\Movement $movement
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function reject(Movement $movement)
     {
         if ($movement->type !== 'spoil' || $movement->status !== 'pending') {

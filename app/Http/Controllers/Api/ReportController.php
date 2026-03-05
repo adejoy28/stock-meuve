@@ -34,7 +34,14 @@ class ReportController extends Controller
         }
     }
 
-    // Summary report
+    /**
+     * Summary report
+     *
+     * Returns a summary report of all inventory movements for the specified period.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function summary(Request $request)
     {
         $period = $request->get('period', 'today');
@@ -61,7 +68,14 @@ class ReportController extends Controller
         ];
     }
 
-    // By-shop report
+    /**
+     * By-shop report
+     *
+     * Returns a report of inventory distributions grouped by shop for the specified period.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return array
+     */
     public function byShop(Request $request)
     {
         $period = $request->get('period', 'today');
@@ -95,7 +109,14 @@ class ReportController extends Controller
         return $result;
     }
 
-    // By-product report
+    /**
+     * By-product report
+     *
+     * Returns a report of inventory movements grouped by product for the specified period.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function byProduct(Request $request)
     {
         $period = $request->get('period', 'today');
@@ -133,7 +154,14 @@ class ReportController extends Controller
         return $result;
     }
 
-    // Spoils report
+    /**
+     * Spoils report
+     *
+     * Returns a report of spoiled inventory grouped by product and reason for the specified period.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return array
+     */
     public function spoils(Request $request)
     {
         $period = $request->get('period', 'today');

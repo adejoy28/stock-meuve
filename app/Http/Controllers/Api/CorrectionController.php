@@ -16,7 +16,14 @@ use Illuminate\Http\Request;
 
 class CorrectionController extends Controller
 {
-    // Record stock correction (positive or negative)
+    /**
+     * Record stock correction
+     *
+     * Records a stock correction (positive or negative) for inventory adjustments.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([

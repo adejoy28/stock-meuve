@@ -17,14 +17,27 @@ use Illuminate\Http\Response;
 
 class ShopController extends Controller
 {
-    // List all non-archived shops
+    /**
+     * List all shops
+     *
+     * Returns a list of all non-archived shops with their total distributed amounts.
+     *
+     * @return \App\Http\Resources\ShopResource
+     */
     public function index()
     {
         $shops = Shop::where('archived', false)->get();
         return ShopResource::collection($shops);
     }
 
-    // Create shop
+    /**
+     * Create shop
+     *
+     * Creates a new shop with the provided name.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \App\Http\Resources\ShopResource
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -35,7 +48,15 @@ class ShopController extends Controller
         return new ShopResource($shop);
     }
 
-    // Update shop name
+    /**
+     * Update shop
+     *
+     * Updates the specified shop's name.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\Shop $shop
+     * @return \App\Http\Resources\ShopResource
+     */
     public function update(Request $request, Shop $shop)
     {
         $validated = $request->validate([
@@ -46,7 +67,14 @@ class ShopController extends Controller
         return new ShopResource($shop);
     }
 
-    // Archive shop (soft delete)
+    /**
+     * Archive shop
+     *
+     * Archives the specified shop (soft delete). Archived shops won't appear in the main list.
+     *
+     * @param \App\Models\Shop $shop
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function destroy(Shop $shop)
     {
         $shop->update(['archived' => true]);

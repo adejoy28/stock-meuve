@@ -18,7 +18,13 @@ use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
-    // List all Products with balance
+    /**
+     * List all products
+     *
+     * Returns a list of all products with their current balance.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function index()
     {
         $products = Product::all();
@@ -29,7 +35,14 @@ class ProductController extends Controller
         ]);
     }
 
-    // Create new Product
+    /**
+     * Create new product
+     *
+     * Creates a new product with the provided details.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -47,7 +60,15 @@ class ProductController extends Controller
         ], 201);
     }
 
-    // Update Product
+    /**
+     * Update product
+     *
+     * Updates the specified product with the provided details.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\Product $product
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function update(Request $request, Product $product)
     {
         $validated = $request->validate([
@@ -69,7 +90,14 @@ class ProductController extends Controller
         ]);
     }
 
-    // Delete Product (only if no movements exist)
+    /**
+     * Delete product
+     *
+     * Deletes the specified product. Only allowed if no movements exist for this product.
+     *
+     * @param \App\Models\Product $product
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function destroy(Product $product)
     {
         if ($product->movements()->exists()) {
@@ -89,7 +117,14 @@ class ProductController extends Controller
         ], 204);
     }
 
-    // Get specific Product
+    /**
+     * Get specific product
+     *
+     * Returns the details of the specified product including current balance.
+     *
+     * @param \App\Models\Product $product
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function show(Product $product)
     {
         return response()->json([
