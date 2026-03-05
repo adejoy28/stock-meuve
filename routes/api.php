@@ -45,8 +45,8 @@ Route::post('movements/correction', [CorrectionController::class, 'store']);
 
 // Spoil Management
 Route::post('movements/spoil', [SpoilController::class, 'store']);
-Route::put('movements/spoil/{id}/confirm', [SpoilController::class, 'confirm']);
-Route::put('movements/spoil/{id}/reject', [SpoilController::class, 'reject']);
+Route::put('movements/spoil/{movement}/confirm', [SpoilController::class, 'confirm']);
+Route::put('movements/spoil/{movement}/reject', [SpoilController::class, 'reject']);
 
 // Reports
 Route::get('reports/summary', [ReportController::class, 'summary']);

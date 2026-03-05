@@ -172,7 +172,7 @@ export default function SpoilsPage() {
   )
 
   return (
-    <div className="px-4 py-4 space-y-6 pb-20">
+    <div className="space-y-4">
       {/* Page Header */}
       <div>
         <h1 className="text-xl font-semibold text-gray-900">Spoils Queue</h1>

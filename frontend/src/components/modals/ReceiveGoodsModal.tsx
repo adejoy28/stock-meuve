@@ -54,30 +54,30 @@ export default function ReceiveGoodsModal() {
     setError('')
 
     try {
-      // Only submit products with qty > 0
-      const movements = Object.entries(receiptData)
+      // Build array of products with qty > 0
+      const products = Object.entries(receiptData)
         .filter(([_, qty]) => qty > 0)
         .map(([productId, qty]) => ({
-          sku_id: parseInt(productId),
-          qty: parseFloat(qty.toString()),
-          note: note.trim() || null,
-          recorded_at: new Date().toISOString()
+          product_id: parseInt(productId),  // ← product_id not sku_id
+          qty: Math.round(parseFloat(qty.toString())),
         }))
 
-      if (movements.length === 0) {
+      if (products.length === 0) {
         setError('Please enter quantities for at least one product')
         setLoading(false)
         return
       }
 
-      // Submit receipt movements
-      await recordReceipt({ movements })
+      // note is at the root level, not inside each product
+      await recordReceipt({
+        products,
+        note: note.trim() || null,
+      })
 
       await refreshProducts()
       closeModal()
     } catch (error) {
       const apiError = ApiErrorHandler.handleError(error)
-      
       if (ApiErrorHandler.isConflictError(apiError)) {
         setError('Goods have already been received today. Use a correction entry instead.')
       } else if (ApiErrorHandler.isValidationError(apiError)) {

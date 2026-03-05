@@ -48,7 +48,7 @@ interface StockContextType {
   
   // Data refresh functions
   refreshProducts: () => Promise<void>
-  refreshShops: () => Promise<void>
+  refreshShops: (includeArchived?: boolean) => Promise<void>
   refreshMovements: () => Promise<void>
   refreshReportSummary: () => Promise<void>
   refreshAllData: () => Promise<void>
@@ -94,10 +94,10 @@ export function StockProvider({ children }: StockProviderProps) {
     }
   }
 
-  const refreshShops = async () => {
+  const refreshShops = async (includeArchived = false) => {
     setShopsLoading(true)
     try {
-      const response = await getShops()
+      const response = await getShops(includeArchived)
       
       setShops(extractArray<Shop>(response.data))
     } catch (error) {

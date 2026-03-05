@@ -45,11 +45,11 @@ export default function RecordSpoilModal() {
 
     try {
       await recordSpoil({
-        sku_id: parseInt(selectedProduct),
-        qty: parseFloat(quantity),
+        product_id: parseInt(selectedProduct),  // ← product_id not sku_id
+        qty: Math.round(parseFloat(quantity)),   // ← integer, backend validates min:1
         reason,
         note: note.trim() || null,
-        recorded_at: new Date().toISOString()
+        // remove recorded_at — backend sets it automatically
       })
 
       await refreshProducts()
@@ -95,7 +95,7 @@ export default function RecordSpoilModal() {
             value={selectedProduct}
             onChange={(e) => setSelectedProduct(e.target.value)}
             disabled={products.length === 0}
-            className="w-full px-3 py-3 border border-gray-200 bg-white text-base text-gray-900 focus:outline-none focus:border-orange-500 disabled:opacity-40"
+            className="w-full px-3 py-3 border border-gray-200 bg-white rounded-lg text-base text-gray-900 focus:outline-none focus:border-orange-500 disabled:opacity-40"
             required
           >
             <option value="">Select a product...</option>
@@ -140,7 +140,7 @@ export default function RecordSpoilModal() {
           <select
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            className="w-full px-3 py-3 border border-gray-200 bg-white text-base text-gray-900 focus:outline-none focus:border-orange-500"
+            className="w-full px-3 py-3 border border-gray-200 bg-white rounded-lg text-base text-gray-900 focus:outline-none focus:border-orange-500"
             required
           >
             <option value="">Select a reason...</option>

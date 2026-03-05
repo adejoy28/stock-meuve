@@ -23,7 +23,7 @@ export default function Home() {
   }
 
   return (
-    <div className="px-4 py-4 space-y-6 pb-20">
+    <div className="space-y-4">
       <div className="bg-white border border-gray-200 rounded-xl p-4">
         <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4">Dashboard Overview</h3>
         <p className="text-sm text-gray-700">Your stock, in motion.</p>

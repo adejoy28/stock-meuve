@@ -144,9 +144,9 @@ class ReportController extends Controller
                     'name' => $product->name,
                     'sku_code' => $product->sku_code,
                 ],
-                'received' => $received,
-                'distributed' => $distributed,
-                'spoiled' => $spoiled,
+                'total_received' => $received,       // ← was 'received'
+                'total_distributed' => $distributed, // ← was 'distributed'
+                'total_spoiled' => $spoiled,         // ← was 'spoiled'
                 'balance' => $balance,
             ];
         }
@@ -192,10 +192,12 @@ class ReportController extends Controller
                     'name' => $product->name,
                     'sku_code' => $product->sku_code,
                 ],
-                'damaged_qty' => abs($damaged),
-                'expired_qty' => abs($expired),
-                'returned_qty' => abs($returned),
-                'total' => $total,
+                'reason_breakdown' => [              // ← new nested structure
+                    'damaged' => abs($damaged),      // ← was 'damaged_qty' at root
+                    'expired' => abs($expired),      // ← was 'expired_qty' at root
+                    'returned' => abs($returned),    // ← was 'returned_qty' at root
+                ],
+                'total_spoiled' => $total,           // ← was 'total'
             ];
         }
 

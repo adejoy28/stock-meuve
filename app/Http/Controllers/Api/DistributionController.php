@@ -62,6 +62,7 @@ class DistributionController extends Controller
                 'shop_id' => $validated['shop_id'],
                 'status' => 'confirmed',
                 'note' => $validated['note'] ?? null,
+                'recorded_at' => now(),  // ← add this
             ]);
         }
 

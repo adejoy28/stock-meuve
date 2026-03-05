@@ -47,7 +47,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
         period={period}
         onPeriodChange={setPeriod}
       />
-      <main>
+      <main className="px-4 pt-4 pb-24">
         {children}
       </main>
       <BottomNav pendingSpoilsCount={pendingSpoilsCount} />

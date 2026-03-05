@@ -25,10 +25,10 @@ class ShopResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'archived' => $this->archived,
-            'total_distributed' => $this->movements()
+            'total_distributed' => abs($this->movements()
                 ->where('type', 'distribution')
                 ->where('status', 'confirmed')
-                ->sum('qty'),
+                ->sum('qty')),
         ];
     }
 }

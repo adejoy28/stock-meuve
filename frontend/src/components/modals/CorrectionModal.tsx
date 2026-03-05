@@ -56,11 +56,11 @@ export default function CorrectionModal() {
 
     try {
       const correctionData = {
-        product_id: parseInt(selectedProduct),
-        qty: parseFloat(quantity),
+        product_id: parseInt(selectedProduct),  // ← product_id not sku_id
+        qty: parseFloat(quantity),              // ← can be positive or negative
         note: note.trim(),
         shop_id: selectedShop ? parseInt(selectedShop) : null,
-        recorded_at: new Date().toISOString()
+        // remove recorded_at — backend sets it automatically
       }
 
       await recordCorrection(correctionData)
@@ -96,7 +96,7 @@ export default function CorrectionModal() {
             value={selectedProduct}
             onChange={(e) => setSelectedProduct(e.target.value)}
             disabled={products.length === 0}
-            className="w-full px-3 py-3 border border-gray-200 bg-white text-base text-gray-900 focus:outline-none focus:border-orange-500 disabled:opacity-40"
+            className="w-full px-3 py-3 border border-gray-200 bg-white rounded-lg text-base text-gray-900 focus:outline-none focus:border-orange-500 disabled:opacity-40"
             required
           >
             <option value="">Select a product...</option>
@@ -117,7 +117,7 @@ export default function CorrectionModal() {
             value={selectedShop}
             onChange={(e) => setSelectedShop(e.target.value)}
             disabled={shops.length === 0}
-            className="w-full px-3 py-3 border border-gray-200 bg-white text-base text-gray-900 focus:outline-none focus:border-orange-500 disabled:opacity-40"
+            className="w-full px-3 py-3 border border-gray-200 bg-white rounded-lg text-base text-gray-900 focus:outline-none focus:border-orange-500 disabled:opacity-40"
           >
             <option value="">No shop (stock correction)</option>
             {shops

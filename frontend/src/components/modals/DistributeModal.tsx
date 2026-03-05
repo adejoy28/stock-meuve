@@ -85,30 +85,32 @@ export default function DistributeModal() {
     setError('')
 
     try {
-      // Validation
       if (!selectedShop) {
         setError('Please select a shop')
         setLoading(false)
         return
       }
 
-      // Only submit products with qty > 0
-      const movements = Object.entries(distributionData)
+      // Build array of products with qty > 0
+      const products = Object.entries(distributionData)
         .filter(([_, qty]) => qty > 0)
         .map(([productId, qty]) => ({
-          sku_id: parseInt(productId),
-          qty: parseFloat(qty.toString()),
-          shop_id: parseInt(selectedShop),
-          recorded_at: new Date().toISOString()
+          product_id: parseInt(productId),   // ← product_id not sku_id
+          qty: Math.round(parseFloat(qty.toString())),
         }))
 
-      if (movements.length === 0) {
+      if (products.length === 0) {
         setError('Please enter quantities for at least one product')
         setLoading(false)
         return
       }
 
-      await recordDistribution({ movements })
+      // shop_id at root, products array — not movements array
+      await recordDistribution({
+        shop_id: parseInt(selectedShop),
+        products,
+      })
+
       await refreshProducts()
       closeModal()
     } catch (error) {
@@ -139,7 +141,7 @@ export default function DistributeModal() {
             value={selectedShop}
             onChange={(e) => handleShopChange(e.target.value)}
             disabled={shops.length === 0}
-            className="w-full px-3 py-3 border border-gray-200 bg-white text-base text-gray-900 focus:outline-none focus:border-orange-500 disabled:opacity-40"
+            className="w-full px-3 py-3 border border-gray-200 bg-white rounded-lg text-base text-gray-900 focus:outline-none focus:border-orange-500 disabled:opacity-40"
             required
           >
             <option value="">Choose a shop...</option>

@@ -37,7 +37,9 @@ export const deleteProduct = (id: number) => api.delete(`/products/${id}`).catch
 })
 
 // ── Shops ──
-export const getShops = () => api.get('/shops').catch(error => {
+export const getShops = (includeArchived = false) => api.get('/shops', { 
+  params: includeArchived ? { include_archived: 1 } : {} 
+}).catch(error => {
   throw ApiErrorHandler.handleError(error)
 })
 

@@ -40,6 +40,7 @@ class CorrectionController extends Controller
             'shop_id' => $validated['shop_id'] ?? null,
             'status' => 'confirmed',
             'note' => $validated['note'],
+            'recorded_at' => now(),  // ← add this
         ]);
 
         return response()->json([

@@ -28,6 +28,10 @@ export default function ShopsPage() {
   const [expandedShop, setExpandedShop] = useState<number | null>(null)
   const [shopMovements, setShopMovements] = useState<ShopMovements>({})
 
+  useEffect(() => {
+    refreshShops(showArchived)
+  }, [showArchived])
+
   // Filter shops based on archived status - add safety check
   const filteredShops = Array.isArray(shops) ? shops.filter((shop: Shop) => 
     showArchived ? true : !shop.archived
@@ -41,7 +45,7 @@ export default function ShopsPage() {
     setLoading(true)
     try {
       await createShop({ name: newShopName.trim() })
-      await refreshShops()
+      await refreshShops(showArchived)
       setNewShopName('')
       setShowAddForm(false)
     } catch (error) {
@@ -64,7 +68,7 @@ export default function ShopsPage() {
     
     try {
       await archiveShop(shop.id)
-      await refreshShops()
+      await refreshShops(showArchived)
       setConfirmArchive(null)
     } catch (error) {
       const apiError = ApiErrorHandler.handleError(error)
@@ -210,7 +214,7 @@ export default function ShopsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Page Header */}
       <div className="flex justify-between items-center">
         <div>

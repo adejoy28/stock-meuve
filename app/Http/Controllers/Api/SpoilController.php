@@ -40,6 +40,7 @@ class SpoilController extends Controller
             'reason' => $validated['reason'],
             'status' => 'pending',
             'note' => $validated['note'] ?? null,
+            'recorded_at' => now(),  // ← add this
         ]);
 
         return response()->json([

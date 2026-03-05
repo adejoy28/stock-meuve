@@ -55,41 +55,34 @@ export default function OpeningStockModal() {
     setError('')
 
     try {
-      // Only submit products with qty > 0
-      const movements = Object.entries(openingData)
+      // Build array of products with qty > 0
+      const products = Object.entries(openingData)
         .filter(([_, qty]) => qty > 0)
         .map(([productId, qty]) => ({
-          sku_id: parseInt(productId),
-          qty: parseFloat(qty.toString()),
-          recorded_at: new Date().toISOString()
+          product_id: parseInt(productId),  // ← product_id not sku_id
+          qty: Math.round(parseFloat(qty.toString())),
         }))
 
-      if (movements.length === 0) {
+      if (products.length === 0) {
         setError('Please enter quantities for at least one product')
         setLoading(false)
         return
       }
 
-      // Submit all opening movements
-      for (const movement of movements) {
-        await recordOpening(movement)
-      }
+      // Send all products in a single request
+      await recordOpening({ products })
 
       await refreshProducts()
       closeModal()
     } catch (error) {
       const apiError = ApiErrorHandler.handleError(error)
-      
       if (ApiErrorHandler.isConflictError(apiError)) {
-        showToast({ type: 'error', message: 'Opening stock has already been recorded today' })
+        setError('Opening stock has already been recorded today')
       } else if (ApiErrorHandler.isValidationError(apiError)) {
-        showToast({ type: 'error', message: apiError.message })
-      } else if (ApiErrorHandler.isNetworkError(apiError)) {
-        showToast({ type: 'error', message: 'Cannot connect to server. Please check your internet connection.' })
+        setError(apiError.message)
       } else {
-        showToast({ type: 'error', message: 'Failed to record opening stock. Please try again.' })
+        setError('Failed to record opening stock. Please try again.')
       }
-      setError(apiError.message)
     } finally {
       setLoading(false)
     }

@@ -12,17 +12,17 @@ import {
   getReportSpoils 
 } from '@/lib/api'
 import { formatNumber, extractArray } from '@/lib/helpers'
-const formatCurrency = (num: number) => `₦${new Intl.NumberFormat('en-NG').format(num || 0)}`
 import StatCard from '@/components/ui/StatCard'
+import type { Product, Shop, Movement, ReportSummary } from '@/types'
 
 export default function ReportsPage() {
   const { period, setPeriod, products, shops } = useStock()
   const [activeTab, setActiveTab] = useState('summary')
   const [loading, setLoading] = useState(true)
-  const [summaryData, setSummaryData] = useState(null)
-  const [byShopData, setByShopData] = useState([])
-  const [byProductData, setByProductData] = useState([])
-  const [spoilsData, setSpoilsData] = useState([])
+  const [summaryData, setSummaryData] = useState<ReportSummary | null>(null)
+  const [byShopData, setByShopData] = useState<any[]>([])
+  const [byProductData, setByProductData] = useState<any[]>([])
+  const [spoilsData, setSpoilsData] = useState<any[]>([])
 
   // Load all report data when period changes
   useEffect(() => {
@@ -41,7 +41,7 @@ export default function ReportsPage() {
           getReportSpoils(period)
         ])
 
-      setSummaryData(summaryResponse.data)
+      setSummaryData(summaryResponse.data as ReportSummary)
       setByShopData(extractArray(byShopResponse.data))
       setByProductData(extractArray(byProductResponse.data))
       setSpoilsData(extractArray(spoilsResponse.data))
@@ -57,33 +57,28 @@ export default function ReportsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
           label="Opening Stock"
-          value={formatNumber(summaryData?.total_opening || 0)}
-          icon="🌅"
+          value={summaryData?.total_opening || 0}
           color="orange"
         />
         <StatCard
           label="Received"
-          value={formatNumber(summaryData?.total_received || 0)}
-          icon="📥"
+          value={summaryData?.total_received || 0}
           color="green"
         />
         <StatCard
           label="Distributed"
-          value={formatNumber(summaryData?.total_distributed || 0)}
-          icon="🚚"
-          color="yellow"
+          value={summaryData?.total_distributed || 0}
+          color="orange"
         />
         <StatCard
           label="Spoiled"
-          value={formatNumber(summaryData?.total_spoiled || 0)}
-          icon="💔"
+          value={summaryData?.total_spoiled || 0}
           color="red"
         />
         <StatCard
           label="Current Balance"
-          value={formatNumber(summaryData?.current_balance || 0)}
-          icon="📊"
-          color="purple"
+          value={summaryData?.current_balance || 0}
+          color="green"
         />
       </div>
     </div>
@@ -123,13 +118,13 @@ export default function ReportsPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-orange-500">
-                      {formatNumber(shopData?.total_distributed || 0)}
+                      {shopData?.total_distributed || 0}
                     </div>
                   </td>
                   {products.map(product => (
                     <td key={product.id} className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {formatNumber(productBreakdown[product.id] || 0)}
+                        {productBreakdown[product.id] || 0}
                       </div>
                     </td>
                   ))}
@@ -185,17 +180,17 @@ export default function ReportsPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-green-600">
-                      {formatNumber(productData?.total_received || 0)}
+                      {productData?.total_received || 0}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-orange-500">
-                      {formatNumber(productData?.total_distributed || 0)}
+                      {productData?.total_distributed || 0}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-red-600">
-                      {formatNumber(productData?.total_spoiled || 0)}
+                      {productData?.total_spoiled || 0}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -254,22 +249,22 @@ export default function ReportsPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-orange-600">
-                      {formatNumber(reasonBreakdown.damaged || 0)}
+                      {reasonBreakdown.damaged || 0}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-purple-600">
-                      {formatNumber(reasonBreakdown.expired || 0)}
+                      {reasonBreakdown.expired || 0}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-yellow-600">
-                      {formatNumber(reasonBreakdown.returned || 0)}
+                      {reasonBreakdown.returned || 0}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-bold text-red-600">
-                      {formatNumber(spoilData?.total_spoiled || 0)}
+                      {spoilData?.total_spoiled || 0}
                     </div>
                   </td>
                 </tr>
@@ -310,7 +305,7 @@ export default function ReportsPage() {
   const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Page Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -341,7 +336,7 @@ export default function ReportsPage() {
       </div>
 
       {/* Active Tab Content */}
-      <ActiveComponent />
+      {ActiveComponent && <ActiveComponent />}
     </div>
   )
 }

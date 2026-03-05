@@ -24,10 +24,16 @@ class ShopController extends Controller
      *
      * @return \App\Http\Resources\ShopResource
      */
-    public function index()
+    public function index(Request $request)
     {
-        $shops = Shop::where('archived', false)->get();
-        return ShopResource::collection($shops);
+        $query = Shop::query();
+        
+        // Include archived if requested
+        if (!$request->boolean('include_archived')) {
+            $query->where('archived', false);
+        }
+        
+        return ShopResource::collection($query->get());
     }
 
     /**

@@ -25,8 +25,8 @@ export default function TopBar({ title, period, onPeriodChange }: TopBarProps) {
   ]
 
   return (
-    <header className="sticky top-0 z-40 h-14 bg-white border-b border-gray-200">
-      <div className="flex justify-between items-center h-full px-4 py-3">
+    <header className="sticky top-0 z-40 bg-white border-b border-gray-200">
+      <div className="flex justify-between items-center px-4 py-3">
         <div>
           <h1 className="text-lg font-semibold text-gray-900">{title}</h1>
           <p className="text-xs text-gray-400">{today}</p>

@@ -78,7 +78,7 @@ export default function MovementsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Page Header */}
       <div>
         <h1 className="text-xl font-semibold text-gray-900">Movements</h1>
