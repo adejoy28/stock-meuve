@@ -11,17 +11,23 @@ RUN apt-get update && apt-get install -y \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
-# Clear composer cache
-RUN composer clear-cache
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy composer files
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy composer files first (better layer caching)
 COPY composer.json composer.lock ./
 
 # Install composer dependencies
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 # Copy application code
 COPY . .
+
+# Run post-install scripts after full code is present
+RUN composer run-script post-autoload-dump 2>/dev/null || true
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
