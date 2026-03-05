@@ -1,4 +1,4 @@
-// src/types/index.ts — Shared type definitions for StockFlow application
+// src/types/index.ts — Shared type definitions for Stockmeuve application
 // Single source of truth for all data interfaces
 
 export interface Product {

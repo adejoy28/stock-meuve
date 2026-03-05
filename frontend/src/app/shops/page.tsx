@@ -7,15 +7,10 @@ import { useState, useEffect } from 'react'
 import { useStock } from '@/context/StockContext'
 import { createShop, archiveShop } from '@/lib/api'
 import { getMovements } from '@/lib/api'
+import { formatDate, formatNumber, extractArray } from '@/lib/helpers'
+import { ApiErrorHandler } from '@/lib/errorHandler'
 import type { Shop, Movement } from '@/types'
 
-interface ShopStats {
-  [key: number]: {
-    totalDistributed: number
-    lastDelivery: string | null
-    deliveriesCount: number
-  }
-}
 
 interface ShopMovements {
   [key: number]: Movement[]
@@ -27,7 +22,9 @@ export default function ShopsPage() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [newShopName, setNewShopName] = useState('')
   const [loading, setLoading] = useState(false)
-  const [shopStats, setShopStats] = useState<ShopStats>({})
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [confirmArchive, setConfirmArchive] = useState<number | null>(null)
+  const [archiveError, setArchiveError] = useState<string | null>(null)
   const [expandedShop, setExpandedShop] = useState<number | null>(null)
   const [shopMovements, setShopMovements] = useState<ShopMovements>({})
 
@@ -36,64 +33,11 @@ export default function ShopsPage() {
     showArchived ? true : !shop.archived
   ) : []
 
-  // Load shop statistics
-  useEffect(() => {
-    loadShopStats()
-  }, [shops])
-
-  const loadShopStats = async () => {
-    const stats: ShopStats = {}
-    
-    for (const shop of shops) {
-      try {
-        // Get all distribution movements for this shop
-        const response = await getMovements({ shop_id: shop.id, type: 'distribution' })
-        console.log('Shop movements response:', response)
-        
-        let movementsArray: Movement[] = []
-        if (response.data && Array.isArray(response.data.data)) {
-          movementsArray = response.data.data
-        } else if (response.data && Array.isArray(response.data)) {
-          movementsArray = response.data
-        } else {
-          movementsArray = []
-        }
-        
-        const movements = movementsArray
-        
-        // Calculate total distributed
-        const totalDistributed = movements.reduce((sum: number, movement: Movement) => 
-          sum + Math.abs(movement.qty), 0
-        )
-        
-        // Find last delivery date
-        const lastDelivery = movements.length > 0 ? 
-          movements.reduce((latest: Movement, movement: Movement) => 
-            new Date(movement.recorded_at) > new Date(latest.recorded_at) ? movement : latest
-          ).recorded_at : null
-        
-        stats[shop.id] = {
-          totalDistributed,
-          lastDelivery,
-          deliveriesCount: movements.length
-        }
-      } catch (error) {
-        console.error(`Failed to load stats for shop ${shop.id}:`, error)
-        stats[shop.id] = {
-          totalDistributed: 0,
-          lastDelivery: null,
-          deliveriesCount: 0
-        }
-      }
-    }
-    
-    setShopStats(stats)
-  }
-
   const handleAddShop = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newShopName.trim()) return
 
+    setCreateError(null)
     setLoading(true)
     try {
       await createShop({ name: newShopName.trim() })
@@ -101,22 +45,37 @@ export default function ShopsPage() {
       setNewShopName('')
       setShowAddForm(false)
     } catch (error) {
-      alert('Failed to create shop. Please try again.')
+      const apiError = ApiErrorHandler.handleError(error)
+      
+      if (ApiErrorHandler.isValidationError(apiError)) {
+        setCreateError(apiError.message)
+      } else if (ApiErrorHandler.isNetworkError(apiError)) {
+        setCreateError('Cannot connect to server. Please check your internet connection.')
+      } else {
+        setCreateError('Failed to create shop. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
   }
 
   const handleArchiveShop = async (shop: Shop) => {
-    if (!confirm(`Are you sure you want to archive "${shop.name}"? This will hide it from the active list.`)) {
-      return
-    }
-
+    setArchiveError(null)
+    
     try {
       await archiveShop(shop.id)
       await refreshShops()
+      setConfirmArchive(null)
     } catch (error) {
-      alert('Failed to archive shop. Please try again.')
+      const apiError = ApiErrorHandler.handleError(error)
+      
+      if (ApiErrorHandler.isConflictError(apiError)) {
+        setArchiveError('Cannot archive shop - it may be in use.')
+      } else if (ApiErrorHandler.isNetworkError(apiError)) {
+        setArchiveError('Cannot connect to server. Please check your internet connection.')
+      } else {
+        setArchiveError('Failed to archive shop. Please try again.')
+      }
     }
   }
 
@@ -129,47 +88,24 @@ export default function ShopsPage() {
 
     try {
       const response = await getMovements({ shop_id: shopId })
-      console.log('Shop detail movements response:', response)
-      
-      let movementsArray = response.data
-      if (response.data && Array.isArray(response.data.data)) {
-        movementsArray = response.data.data
-      } else if (response.data && Array.isArray(response.data)) {
-        movementsArray = response.data
-      } else {
-        movementsArray = []
-      }
       
       setShopMovements(prev => ({
         ...prev,
-        [shopId]: movementsArray
+        [shopId]: extractArray<Movement>(response.data)
       }))
       setExpandedShop(shopId)
     } catch (error) {
-      console.error('Failed to load shop movements:', error)
+      const apiError = ApiErrorHandler.handleError(error)
+      console.error('Failed to load shop movements:', apiError)
     }
   }
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr)
-    return date.toLocaleDateString('en-GB', { 
-      day: '2-digit', 
-      month: 'short', 
-      year: 'numeric' 
-    })
-  }
-
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat().format(num)
-  }
-
   const ShopCard = ({ shop }: { shop: Shop }) => {
-    const stats = shopStats[shop.id] || { totalDistributed: 0, lastDelivery: null, deliveriesCount: 0 }
     const isExpanded = expandedShop === shop.id
     const movements = shopMovements[shop.id] || []
 
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div className="p-6">
           <div className="flex justify-between items-start mb-4">
             <div>
@@ -184,34 +120,55 @@ export default function ShopsPage() {
               <div className="flex space-x-2">
                 <button
                   onClick={() => loadShopMovements(shop.id)}
-                  className="text-blue-600 hover:text-blue-800 text-sm"
+                  className="text-orange-500 active:opacity-70 text-sm"
                 >
                   {isExpanded ? 'Hide' : 'Show'} History
                 </button>
-                <button
-                  onClick={() => handleArchiveShop(shop)}
-                  className="text-red-600 hover:text-red-800 text-sm"
-                >
-                  Archive
-                </button>
+                {confirmArchive === shop.id ? (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleArchiveShop(shop)}
+                      className="text-sm text-red-500 active:opacity-70"
+                    >
+                      Yes, archive
+                    </button>
+                    <button
+                      onClick={() => setConfirmArchive(null)}
+                      className="text-sm text-gray-600 active:opacity-70"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmArchive(shop.id)}
+                    className="text-red-500 text-sm active:opacity-70"
+                  >
+                    Archive
+                  </button>
+                )}
+                {archiveError && confirmArchive === shop.id && (
+                  <p className="text-xs text-red-500 mt-1">{archiveError}</p>
+                )}
               </div>
             )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-500">Total Delivered</p>
-              <p className="text-2xl font-bold text-blue-600">
-                {formatNumber(stats.totalDistributed)}
+              <p className="text-sm text-gray-500">Total delivered</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {formatNumber(shop.total_distributed)}
               </p>
-              <p className="text-xs text-gray-500">cartons (all time)</p>
+              <p className="text-xs text-gray-500">cartons</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Last Delivery</p>
+              <p className="text-sm text-gray-500">Last delivery</p>
               <p className="text-lg font-semibold text-gray-900">
-                {stats.lastDelivery ? 
-                  formatDate(stats.lastDelivery) : 
-                  'No deliveries yet'
+                {/* Load last delivery on demand when expanded */}
+                {isExpanded && movements.length > 0 ? 
+                  formatDate(movements[0].recorded_at) : 
+                  'Show history'
                 }
               </p>
             </div>
@@ -230,7 +187,7 @@ export default function ShopsPage() {
                     <span className="text-gray-500 ml-2">({movement.product?.sku_code})</span>
                   </div>
                   <div className="text-right">
-                    <span className="font-medium text-blue-600">
+                    <span className="font-medium text-orange-500">
                       {formatNumber(Math.abs(movement.qty))} cartons
                     </span>
                     <div className="text-xs text-gray-500">
@@ -257,19 +214,19 @@ export default function ShopsPage() {
       {/* Page Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Shops</h1>
+          <h1 className="text-xl font-semibold text-gray-900">Shops</h1>
           <p className="text-gray-600 mt-2">Manage delivery destinations and view distribution history</p>
         </div>
         <button
           onClick={() => setShowAddForm(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="px-4 py-2 bg-orange-500 text-white rounded-lg active:opacity-70"
         >
           Add Shop
         </button>
       </div>
 
       {/* Show Archived Toggle */}
-      <div className="bg-white p-4 rounded-lg shadow">
+      <div className="bg-white border border-gray-200 rounded-lg p-4">
         <label className="flex items-center">
           <input
             type="checkbox"
@@ -283,22 +240,25 @@ export default function ShopsPage() {
 
       {/* Add Shop Form */}
       {showAddForm && (
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Shop</h3>
           <form onSubmit={handleAddShop}>
-            <div className="flex space-x-4">
+            {createError && (
+              <p className="text-sm text-red-500 mb-3">{createError}</p>
+            )}
+            <div className="flex flex-col gap-3">
               <input
                 type="text"
                 value={newShopName}
                 onChange={(e) => setNewShopName(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full h-12 border border-gray-200 rounded-lg px-3 text-base focus:outline-none focus:border-orange-500"
                 placeholder="Enter shop name..."
                 required
               />
               <button
                 type="submit"
                 disabled={loading}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                className="w-full h-12 bg-orange-500 text-white rounded-lg text-sm font-medium active:opacity-70 disabled:opacity-40"
               >
                 {loading ? 'Adding...' : 'Add Shop'}
               </button>
@@ -307,8 +267,9 @@ export default function ShopsPage() {
                 onClick={() => {
                   setShowAddForm(false)
                   setNewShopName('')
+                  setCreateError(null)
                 }}
-                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="w-full h-12 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm active:opacity-70"
               >
                 Cancel
               </button>
@@ -326,7 +287,7 @@ export default function ShopsPage() {
 
       {/* Empty State */}
       {filteredShops.length === 0 && (
-        <div className="bg-white p-8 rounded-lg shadow text-center">
+        <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
           <div className="text-gray-400 text-4xl mb-4">🏪</div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             {showArchived ? 'No shops found' : 'No shops yet'}
@@ -340,7 +301,7 @@ export default function ShopsPage() {
           {!showArchived && (
             <button
               onClick={() => setShowAddForm(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg active:opacity-70"
             >
               Add Your First Shop
             </button>

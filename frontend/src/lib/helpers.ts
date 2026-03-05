@@ -2,23 +2,12 @@
 
 // Format a date for display: "04 Mar 2026"
 export function formatDate(dateStr: string): string {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
-  const day = date.getDate().toString().padStart(2, '0')
-  const month = date.toLocaleDateString('en-US', { month: 'short' })
-  const year = date.getFullYear()
-  return `${day} ${month} ${year}`
+  return new Date(dateStr).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 // Format a timestamp for display: "14:32"
 export function formatTime(dateStr: string): string {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
-  return date.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  })
+  return new Date(dateStr).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 }
 
 // Get the start of a period as an ISO string
@@ -51,8 +40,16 @@ export function periodStart(period: string): string {
 
 // Format a number with commas: 4200 → "4,200"
 export function formatNumber(num: number): string {
-  if (num === null || num === undefined) return '0'
-  return num.toLocaleString('en-US')
+  return new Intl.NumberFormat().format(num)
+}
+
+// Safely extracts an array from an Axios response data field
+// Handles both { data: [...] } and plain [...] shapes
+export function extractArray<T>(responseData: unknown): T[] {
+  if (!responseData) return []
+  if (Array.isArray((responseData as any).data)) return (responseData as any).data
+  if (Array.isArray(responseData)) return responseData as T[]
+  return []
 }
 
 // Return a label for movement type
@@ -72,7 +69,7 @@ export function movementTypeColor(type: string): string {
   const colors: Record<string, string> = {
     opening: 'text-orange-500 bg-orange-50',
     receipt: 'text-green-500 bg-green-50',
-    distribution: 'text-blue-500 bg-blue-50',
+    distribution: 'text-orange-500 bg-orange-50',
     correction: 'text-yellow-500 bg-yellow-50',
     spoil: 'text-red-500 bg-red-50'
   }
@@ -84,7 +81,7 @@ export function movementTypeTextColor(type: string): string {
   const colors: Record<string, string> = {
     opening: 'text-orange-500',
     receipt: 'text-green-500',
-    distribution: 'text-blue-500',
+    distribution: 'text-orange-500',
     correction: 'text-yellow-500',
     spoil: 'text-red-500'
   }

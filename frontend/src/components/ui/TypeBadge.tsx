@@ -10,7 +10,7 @@ export default function TypeBadge({ type }: TypeBadgeProps) {
     const configs = {
       opening: {
         label: 'Opening',
-        classes: 'inline-flex items-center bg-blue-50 text-blue-600 text-xs font-medium px-2 py-0.5 rounded-full'
+        classes: 'inline-flex items-center bg-orange-50 text-orange-600 text-xs font-medium px-2 py-0.5 rounded-full'
       },
       receipt: {
         label: 'Received',

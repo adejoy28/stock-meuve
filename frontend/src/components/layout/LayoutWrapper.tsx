@@ -36,7 +36,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
       case '/reports':
         return 'Reports'
       default:
-        return 'StockFlow'
+        return 'Stockmeuve'
     }
   }
 

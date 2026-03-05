@@ -1,4 +1,4 @@
-// StockContext — Global state for StockFlow application
+// StockContext — Global state for Stockmeuve application
 // Provides: SKUs, shops, period, modal management, and data sharing across components
 
 'use client'
@@ -11,6 +11,7 @@ import {
   getReportSummary 
 } from '@/lib/api'
 import { ApiErrorHandler } from '@/lib/errorHandler'
+import { extractArray } from '@/lib/helpers'
 import type { Product, Shop, Movement, ReportSummary } from '@/types'
 
 interface StockContextType {
@@ -82,22 +83,8 @@ export function StockProvider({ children }: StockProviderProps) {
     setProductsLoading(true)
     try {
       const response = await getProducts()
-      console.log('Raw API response for products:', response)
-      console.log('Response data:', response.data)
       
-      // Handle different possible response structures
-      let productsArray = response.data
-      if (response.data && Array.isArray(response.data.data)) {
-        productsArray = response.data.data
-      } else if (response.data && Array.isArray(response.data)) {
-        productsArray = response.data
-      } else {
-        console.error('Unexpected products response structure:', response.data)
-        productsArray = []
-      }
-      
-      console.log('Setting products to:', productsArray)
-      setProducts(productsArray)
+;      setProducts(extractArray<Product>(response.data))
     } catch (error) {
       const apiError = ApiErrorHandler.handleError(error)
       console.error('Failed to fetch products:', apiError)
@@ -112,18 +99,7 @@ export function StockProvider({ children }: StockProviderProps) {
     try {
       const response = await getShops()
       
-      // Handle different possible response structures
-      let shopsArray = response.data
-      if (response.data && Array.isArray(response.data.data)) {
-        shopsArray = response.data.data
-      } else if (response.data && Array.isArray(response.data)) {
-        shopsArray = response.data
-      } else {
-        console.error('Unexpected shops response structure:', response.data)
-        shopsArray = []
-      }
-      
-      setShops(shopsArray)
+      setShops(extractArray<Shop>(response.data))
     } catch (error) {
       const apiError = ApiErrorHandler.handleError(error)
       console.error('Failed to fetch shops:', apiError)
@@ -137,18 +113,7 @@ export function StockProvider({ children }: StockProviderProps) {
     try {
       const response = await getMovements({ limit: 50 })
       
-      // Handle different possible response structures
-      let movementsArray = response.data
-      if (response.data && Array.isArray(response.data.data)) {
-        movementsArray = response.data.data
-      } else if (response.data && Array.isArray(response.data)) {
-        movementsArray = response.data
-      } else {
-        console.error('Unexpected movements response structure:', response.data)
-        movementsArray = []
-      }
-      
-      setMovements(movementsArray)
+      setMovements(extractArray<Movement>(response.data))
     } catch (error) {
       const apiError = ApiErrorHandler.handleError(error)
       console.error('Failed to fetch movements:', apiError)
@@ -159,7 +124,6 @@ export function StockProvider({ children }: StockProviderProps) {
   const refreshReportSummary = async () => {
     try {
       const response = await getReportSummary(period)
-      console.log('Report summary response:', response)
       // Report summary is an object, not an array, so handle it differently
       setReportSummary(response.data)
     } catch (error) {
@@ -180,17 +144,8 @@ export function StockProvider({ children }: StockProviderProps) {
       
       // Count pending spoils
       const pendingResponse = await getMovements({ status: 'pending' })
-      console.log('Pending spoils count response:', pendingResponse)
       
-      let pendingArray = pendingResponse.data
-      if (pendingResponse.data && Array.isArray(pendingResponse.data.data)) {
-        pendingArray = pendingResponse.data.data
-      } else if (pendingResponse.data && Array.isArray(pendingResponse.data)) {
-        pendingArray = pendingResponse.data
-      } else {
-        pendingArray = []
-      }
-      
+      const pendingArray = extractArray<Movement>(pendingResponse.data)
       setPendingSpoilsCount(pendingArray.length)
     } catch (error) {
       console.error('Failed to refresh data:', error)

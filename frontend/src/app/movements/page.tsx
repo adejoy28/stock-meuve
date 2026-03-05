@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react'
 import { useStock } from '@/context/StockContext'
 import { getMovements } from '@/lib/api'
+import { formatDate, formatTime, formatNumber, extractArray } from '@/lib/helpers'
 import TypeBadge from '@/components/ui/TypeBadge'
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton'
 import EmptyState from '@/components/ui/EmptyState'
@@ -46,7 +47,7 @@ export default function MovementsPage() {
         params.type = filters.type
       }
       if (filters.product_id) {
-        params.sku_id = filters.product_id
+        params.product_id = filters.product_id
       }
       if (filters.shop_id) {
         params.shop_id = filters.shop_id
@@ -59,24 +60,11 @@ export default function MovementsPage() {
       }
 
       const response = await getMovements(params)
-      console.log('Raw movements response:', response)
-      console.log('Movements response data:', response.data)
       
-      // Handle different possible response structures
-      let movementsArray = response.data
-      if (response.data && Array.isArray(response.data.data)) {
-        movementsArray = response.data.data
-      } else if (response.data && Array.isArray(response.data)) {
-        movementsArray = response.data
-      } else {
-        console.error('Unexpected movements response structure:', response.data)
-        movementsArray = []
-      }
-      
-      console.log('Setting movements to:', movementsArray)
-      setMovements(movementsArray)
+      setMovements(extractArray<Movement>(response.data))
     } catch (error) {
       console.error('Failed to load movements:', error)
+      setMovements([])
     } finally {
       setLoading(false)
     }
@@ -89,27 +77,6 @@ export default function MovementsPage() {
     }))
   }
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr)
-    return date.toLocaleDateString('en-GB', { 
-      day: '2-digit', 
-      month: 'short', 
-      year: 'numeric' 
-    })
-  }
-
-  const formatTime = (dateStr: string) => {
-    const date = new Date(dateStr)
-    return date.toLocaleTimeString('en-GB', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    })
-  }
-
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat().format(num)
-  }
-
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -119,7 +86,7 @@ export default function MovementsPage() {
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className="bg-white border border-gray-200 rounded-lg p-6">
         <div className="space-y-4">
           {/* Type Filter */}
           <div>
@@ -129,7 +96,7 @@ export default function MovementsPage() {
             <select
               value={filters.type}
               onChange={(e) => handleFilterChange('type', e.target.value)}
-              className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500"
             >
               <option value="all">All Types</option>
               <option value="opening">Opening</option>
@@ -148,7 +115,7 @@ export default function MovementsPage() {
             <select
               value={filters.product_id}
               onChange={(e) => handleFilterChange('product_id', e.target.value)}
-              className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500"
             >
               <option value="">All Products</option>
               {Array.isArray(products) ? products.map((product: Product) => (
@@ -169,7 +136,7 @@ export default function MovementsPage() {
             <select
               value={filters.shop_id}
               onChange={(e) => handleFilterChange('shop_id', e.target.value)}
-              className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500"
             >
               <option value="">All Shops</option>
               {shops.filter(shop => !shop.archived).map(shop => (
@@ -189,7 +156,7 @@ export default function MovementsPage() {
               type="date"
               value={filters.from}
               onChange={(e) => handleFilterChange('from', e.target.value)}
-              className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500"
             />
           </div>
 
@@ -202,7 +169,7 @@ export default function MovementsPage() {
               type="date"
               value={filters.to}
               onChange={(e) => handleFilterChange('to', e.target.value)}
-              className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500"
             />
           </div>
         </div>
@@ -217,7 +184,7 @@ export default function MovementsPage() {
               from: '',
               to: ''
             })}
-            className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+            className="px-4 py-2 text-gray-700 border border-gray-200 rounded-lg active:opacity-70"
           >
             Clear Filters
           </button>
@@ -225,7 +192,7 @@ export default function MovementsPage() {
       </div>
 
       {/* Movements Table */}
-      <div className="bg-white shadow rounded-lg overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-medium text-gray-900">
             Movements ({movements.length})
@@ -245,7 +212,8 @@ export default function MovementsPage() {
             }
           />
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -274,7 +242,7 @@ export default function MovementsPage() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {movements.map((movement) => (
-                  <tr key={movement.id} className="hover:bg-gray-50">
+                  <tr key={movement.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
                         {formatDate(movement.recorded_at)}
@@ -332,6 +300,30 @@ export default function MovementsPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile cards — hidden on md and above */}
+          <div className="md:hidden space-y-2 p-4">
+            {movements.map((movement) => (
+              <div key={movement.id} className="bg-white border border-gray-100 rounded-xl px-4 py-3">
+                <div className="flex items-center justify-between mb-1">
+                  <TypeBadge type={movement.type} />
+                  <span className={`text-sm font-bold ${movement.qty > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                    {movement.qty > 0 ? '+' : ''}{formatNumber(movement.qty)}
+                  </span>
+                </div>
+                <p className="text-sm font-medium text-gray-900">{movement.product?.name}</p>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-xs text-gray-400">
+                    {formatDate(movement.recorded_at)} · {formatTime(movement.recorded_at)}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    {movement.shop?.name || movement.note || ''}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+          </>
         )}
       </div>
     </div>

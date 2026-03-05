@@ -26,7 +26,7 @@ export default function Home() {
     <div className="px-4 py-4 space-y-6 pb-20">
       <div className="bg-white border border-gray-200 rounded-xl p-4">
         <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4">Dashboard Overview</h3>
-        <p className="text-sm text-gray-700">Welcome to StockFlow - your stock management system.</p>
+        <p className="text-sm text-gray-700">Your stock, in motion.</p>
         <p className="text-xs text-gray-400 mt-2">Current period: {period}</p>
         {pendingSpoilsCount > 0 && (
           <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -69,28 +69,28 @@ export default function Home() {
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => handleQuickAction('opening')}
-            className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 active:opacity-70 text-left"
+            className="p-4 bg-gray-50 rounded-xl active:opacity-70 text-left"
           >
             <span className="block font-medium text-gray-900">Opening Stock</span>
             <span className="text-xs text-gray-500">Set daily opening balances</span>
           </button>
           <button
             onClick={() => handleQuickAction('receipt')}
-            className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 active:opacity-70 text-left"
+            className="p-4 bg-gray-50 rounded-xl active:opacity-70 text-left"
           >
             <span className="block font-medium text-gray-900">Receive Goods</span>
             <span className="text-xs text-gray-500">Record warehouse receipt</span>
           </button>
           <button
             onClick={() => handleQuickAction('distribution')}
-            className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 active:opacity-70 text-left"
+            className="p-4 bg-gray-50 rounded-xl active:opacity-70 text-left"
           >
             <span className="block font-medium text-gray-900">Distribute</span>
             <span className="text-xs text-gray-500">Deliver to shops</span>
           </button>
           <button
             onClick={() => handleQuickAction('spoil')}
-            className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 active:opacity-70 text-left"
+            className="p-4 bg-gray-50 rounded-xl active:opacity-70 text-left"
           >
             <span className="block font-medium text-gray-900">Record Spoil</span>
             <span className="text-xs text-gray-500">Log damaged/expired items</span>

@@ -7,10 +7,13 @@ import { useState, useEffect } from 'react'
 import BaseModal from '@/components/ui/BaseModal'
 import { useStock } from '@/context/StockContext'
 import { recordOpening } from '@/lib/api'
+import { ApiErrorHandler } from '@/lib/errorHandler'
+import { useToast } from '@/components/ui/Toast'
 import type { Product } from '@/types'
 
 export default function OpeningStockModal() {
   const { activeModal, closeModal, products, refreshProducts } = useStock()
+  const { showToast } = useToast()
   const [openingData, setOpeningData] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -75,11 +78,18 @@ export default function OpeningStockModal() {
       await refreshProducts()
       closeModal()
     } catch (error) {
-      if ((error as { response?: { status?: number } }).response?.status === 409) {
-        setError('Opening stock has already been recorded today')
+      const apiError = ApiErrorHandler.handleError(error)
+      
+      if (ApiErrorHandler.isConflictError(apiError)) {
+        showToast({ type: 'error', message: 'Opening stock has already been recorded today' })
+      } else if (ApiErrorHandler.isValidationError(apiError)) {
+        showToast({ type: 'error', message: apiError.message })
+      } else if (ApiErrorHandler.isNetworkError(apiError)) {
+        showToast({ type: 'error', message: 'Cannot connect to server. Please check your internet connection.' })
       } else {
-        setError('Failed to record opening stock. Please try again.')
+        showToast({ type: 'error', message: 'Failed to record opening stock. Please try again.' })
       }
+      setError(apiError.message)
     } finally {
       setLoading(false)
     }

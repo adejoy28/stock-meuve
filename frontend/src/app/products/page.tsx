@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
 import { useStock } from '@/context/StockContext'
 import { createProduct, updateProduct, deleteProduct } from '@/lib/api'
 import { ApiErrorHandler } from '@/lib/errorHandler'
+import { formatNumber } from '@/lib/helpers'
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton'
 import EmptyState from '@/components/ui/EmptyState'
 import type { Product } from '@/types'
@@ -29,6 +30,9 @@ export default function ProductsPage() {
   })
   const [formLoading, setFormLoading] = useState(false)
   const [error, setError] = useState('')
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null)
+  const formatCurrency = (num: number) => `₦${new Intl.NumberFormat('en-NG').format(num)}`
 
   // Filter products based on search term
   const filteredProducts = products.filter(product => 
@@ -84,20 +88,19 @@ export default function ProductsPage() {
   }
 
   const handleDelete = async (product: Product) => {
-    if (!confirm(`Are you sure you want to delete "${product.name}"? This action cannot be undone.`)) {
-      return
-    }
-
+    setDeleteError(null)
+    
     try {
       await deleteProduct(product.id)
       await refreshProducts()
+      setConfirmDelete(null)
     } catch (error) {
       const apiError = ApiErrorHandler.handleError(error)
       
       if (ApiErrorHandler.isConflictError(apiError)) {
-        alert('Cannot delete product with existing movements. Archive it instead.')
+        setDeleteError('Cannot delete product with existing movements. Archive it instead.')
       } else {
-        alert('Failed to delete product. Please try again.')
+        setDeleteError('Failed to delete product. Please try again.')
       }
     }
   }
@@ -111,17 +114,7 @@ export default function ProductsPage() {
     setEditingProduct(null)
     setShowAddForm(false)
     setError('')
-  }
-
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat().format(num)
-  }
-
-  const formatCurrency = (num: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(num)
+    setDeleteError(null)
   }
 
   return (
@@ -129,31 +122,31 @@ export default function ProductsPage() {
       {/* Page Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Products</h1>
+          <h1 className="text-xl font-semibold text-gray-900">Products</h1>
           <p className="text-gray-600 mt-2">Manage your product catalog and inventory</p>
         </div>
         <button
           onClick={() => setShowAddForm(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="px-4 py-2 bg-orange-500 text-white rounded-lg active:opacity-70"
         >
           Add Product
         </button>
       </div>
 
       {/* Search */}
-      <div className="bg-white p-4 rounded-lg shadow">
+      <div className="bg-white border border-gray-200 rounded-lg p-4">
         <input
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search products by name or SKU code..."
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500"
         />
       </div>
 
       {/* Add/Edit Form */}
       {(showAddForm || editingProduct) && (
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             {editingProduct ? 'Edit Product' : 'Add New Product'}
           </h3>
@@ -174,7 +167,7 @@ export default function ProductsPage() {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500"
                   required
                 />
               </div>
@@ -187,7 +180,7 @@ export default function ProductsPage() {
                   type="text"
                   value={formData.sku_code}
                   onChange={(e) => setFormData({...formData, sku_code: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500"
                   required
                 />
               </div>
@@ -202,26 +195,26 @@ export default function ProductsPage() {
                   min="0"
                   value={formData.cost_price}
                   onChange={(e) => setFormData({...formData, cost_price: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500"
                   placeholder="0.00"
                 />
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end space-x-3">
-              <button
-                type="button"
-                onClick={resetForm}
-                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
+            <div className="mt-6 flex flex-col gap-3 md:flex-row md:justify-end">
               <button
                 type="submit"
                 disabled={formLoading}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                className="w-full md:w-auto h-12 bg-orange-500 text-white rounded-lg text-sm font-medium active:opacity-70 disabled:opacity-40"
               >
                 {formLoading ? 'Saving...' : (editingProduct ? 'Update' : 'Create')}
+              </button>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="w-full md:w-auto h-12 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm active:opacity-70"
+              >
+                Cancel
               </button>
             </div>
           </form>
@@ -229,7 +222,7 @@ export default function ProductsPage() {
       )}
 
       {/* Products Table */}
-      <div className="bg-white shadow rounded-lg overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-medium text-gray-900">
             Products ({filteredProducts.length})
@@ -272,7 +265,7 @@ export default function ProductsPage() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredProducts.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50">
+                  <tr key={product.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{product.name}</div>
                     </td>
@@ -287,7 +280,7 @@ export default function ProductsPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className={`text-sm font-medium ${
                         product.balance === 0 ? 'text-red-600' :
-                        product.balance <= 5 ? 'text-yellow-600' : 'text-green-600'
+                        product.balance <= 5 ? 'text-orange-500' : 'text-green-600'
                       }`}>
                         {formatNumber(product.balance)} units
                       </div>
@@ -295,16 +288,36 @@ export default function ProductsPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <button
                         onClick={() => handleEdit(product)}
-                        className="text-blue-600 hover:text-blue-900 mr-3"
+                        className="text-orange-500 active:opacity-70 mr-3"
                       >
                         Edit
                       </button>
-                      <button
-                        onClick={() => handleDelete(product)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
+                      {confirmDelete === product.id ? (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleDelete(product)}
+                            className="text-sm text-red-500 active:opacity-70"
+                          >
+                            Yes, delete
+                          </button>
+                          <button
+                            onClick={() => setConfirmDelete(null)}
+                            className="text-sm text-gray-600 active:opacity-70"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmDelete(product.id)}
+                          className="text-red-500 text-sm active:opacity-70 ml-3"
+                        >
+                          Delete
+                        </button>
+                      )}
+                      {deleteError && confirmDelete === product.id && (
+                        <p className="text-xs text-red-500 mt-1">{deleteError}</p>
+                      )}
                     </td>
                   </tr>
                 ))}

@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { StockProvider } from "@/context/StockContext";
 import LayoutWrapper from "@/components/layout/LayoutWrapper";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
+import { ToastProvider } from "@/components/ui/Toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "StockFlow",
+  title: "Stockmeuve",
   description: "Stock management system",
 };
 
@@ -30,9 +32,13 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}
       >
         <StockProvider>
-          <LayoutWrapper>
-            {children}
-          </LayoutWrapper>
+          <ToastProvider>
+            <ErrorBoundary>
+              <LayoutWrapper>
+                {children}
+              </LayoutWrapper>
+            </ErrorBoundary>
+          </ToastProvider>
         </StockProvider>
       </body>
     </html>

@@ -11,6 +11,8 @@ import {
   getReportByProduct, 
   getReportSpoils 
 } from '@/lib/api'
+import { formatNumber, extractArray } from '@/lib/helpers'
+const formatCurrency = (num: number) => `₦${new Intl.NumberFormat('en-NG').format(num || 0)}`
 import StatCard from '@/components/ui/StatCard'
 
 export default function ReportsPage() {
@@ -40,53 +42,14 @@ export default function ReportsPage() {
         ])
 
       setSummaryData(summaryResponse.data)
-      
-      // Extract arrays from responses
-      let byShopArray = byShopResponse.data
-      if (byShopResponse.data && Array.isArray(byShopResponse.data.data)) {
-        byShopArray = byShopResponse.data.data
-      } else if (byShopResponse.data && Array.isArray(byShopResponse.data)) {
-        byShopArray = byShopResponse.data
-      } else {
-        byShopArray = []
-      }
-      setByShopData(byShopArray)
-      
-      let byProductArray = byProductResponse.data
-      if (byProductResponse.data && Array.isArray(byProductResponse.data.data)) {
-        byProductArray = byProductResponse.data.data
-      } else if (byProductResponse.data && Array.isArray(byProductResponse.data)) {
-        byProductArray = byProductResponse.data
-      } else {
-        byProductArray = []
-      }
-      setByProductData(byProductArray)
-      
-      let spoilsArray = spoilsResponse.data
-      if (spoilsResponse.data && Array.isArray(spoilsResponse.data.data)) {
-        spoilsArray = spoilsResponse.data.data
-      } else if (spoilsResponse.data && Array.isArray(spoilsResponse.data)) {
-        spoilsArray = spoilsResponse.data
-      } else {
-        spoilsArray = []
-      }
-      setSpoilsData(spoilsArray)
+      setByShopData(extractArray(byShopResponse.data))
+      setByProductData(extractArray(byProductResponse.data))
+      setSpoilsData(extractArray(spoilsResponse.data))
     } catch (error) {
       console.error('Failed to load reports:', error)
     } finally {
       setLoading(false)
     }
-  }
-
-  const formatNumber = (num) => {
-    return new Intl.NumberFormat().format(num || 0)
-  }
-
-  const formatCurrency = (num) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(num || 0)
   }
 
   const SummarySection = () => (
@@ -96,7 +59,7 @@ export default function ReportsPage() {
           label="Opening Stock"
           value={formatNumber(summaryData?.total_opening || 0)}
           icon="🌅"
-          color="blue"
+          color="orange"
         />
         <StatCard
           label="Received"
@@ -127,7 +90,7 @@ export default function ReportsPage() {
   )
 
   const ByShopSection = () => (
-    <div className="bg-white shadow rounded-lg overflow-hidden">
+    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-900">Distribution by Shop</h3>
       </div>
@@ -154,12 +117,12 @@ export default function ReportsPage() {
               const productBreakdown = shopData?.product_breakdown || {}
               
               return (
-                <tr key={shop.id} className="hover:bg-gray-50">
+                <tr key={shop.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{shop.name}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-blue-600">
+                    <div className="text-sm font-medium text-orange-500">
                       {formatNumber(shopData?.total_distributed || 0)}
                     </div>
                   </td>
@@ -180,7 +143,7 @@ export default function ReportsPage() {
   )
 
   const ByProductSection = () => (
-    <div className="bg-white shadow rounded-lg overflow-hidden">
+    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-900">Activity by Product</h3>
       </div>
@@ -213,7 +176,7 @@ export default function ReportsPage() {
               const productData = byProductData.find(item => item.product?.id === product.id)
               
               return (
-                <tr key={product.id} className="hover:bg-gray-50">
+                <tr key={product.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{product.name}</div>
                   </td>
@@ -226,7 +189,7 @@ export default function ReportsPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-blue-600">
+                    <div className="text-sm font-medium text-orange-500">
                       {formatNumber(productData?.total_distributed || 0)}
                     </div>
                   </td>
@@ -238,7 +201,7 @@ export default function ReportsPage() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className={`text-sm font-medium ${
                       product.balance === 0 ? 'text-red-600' :
-                      product.balance <= 5 ? 'text-yellow-600' : 'text-green-600'
+                      product.balance <= 5 ? 'text-orange-500' : 'text-green-600'
                     }`}>
                       {formatNumber(product.balance)}
                     </div>
@@ -253,7 +216,7 @@ export default function ReportsPage() {
   )
 
   const SpoilsSection = () => (
-    <div className="bg-white shadow rounded-lg overflow-hidden">
+    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-900">Spoils Report</h3>
       </div>
@@ -284,7 +247,7 @@ export default function ReportsPage() {
               const reasonBreakdown = spoilData?.reason_breakdown || {}
               
               return (
-                <tr key={product.id} className="hover:bg-gray-50">
+                <tr key={product.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{product.name}</div>
                     <div className="text-xs text-gray-500">{product.sku_code}</div>
@@ -351,28 +314,13 @@ export default function ReportsPage() {
       {/* Page Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Reports</h1>
+          <h1 className="text-xl font-semibold text-gray-900">Reports</h1>
           <p className="text-gray-600 mt-2">Comprehensive reports and analytics</p>
-        </div>
-        
-        {/* Period Selector */}
-        <div className="flex items-center space-x-2">
-          <label className="text-sm font-medium text-gray-700">Period:</label>
-          <select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="today">Today</option>
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-            <option value="all">All Time</option>
-          </select>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="bg-white shadow rounded-lg">
+      <div className="bg-white border border-gray-200 rounded-lg">
         <div className="border-b border-gray-200">
           <nav className="flex -mb-px">
             {tabs.map((tab) => (
@@ -381,8 +329,8 @@ export default function ReportsPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`py-4 px-6 border-b-2 font-medium text-sm ${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-orange-500 text-orange-500'
+                    : 'border-transparent text-gray-500'
                 }`}
               >
                 {tab.label}

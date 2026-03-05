@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
 import BaseModal from '@/components/ui/BaseModal'
 import { useStock } from '@/context/StockContext'
 import { recordSpoil } from '@/lib/api'
+import { ApiErrorHandler } from '@/lib/errorHandler'
 import type { Product } from '@/types'
 
 export default function RecordSpoilModal() {
@@ -55,7 +56,17 @@ export default function RecordSpoilModal() {
       setPendingSpoilsCount(pendingSpoilsCount + 1)
       closeModal()
     } catch (error) {
-      setError('Failed to record spoil. Please try again.')
+      const apiError = ApiErrorHandler.handleError(error)
+      
+      if (ApiErrorHandler.isValidationError(apiError)) {
+        setError(apiError.message)
+      } else if (ApiErrorHandler.isNetworkError(apiError)) {
+        setError('Cannot connect to server. Please check your internet connection.')
+      } else if (ApiErrorHandler.isServerError(apiError)) {
+        setError('Server error occurred. Please try again later.')
+      } else {
+        setError('Failed to record spoil. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
