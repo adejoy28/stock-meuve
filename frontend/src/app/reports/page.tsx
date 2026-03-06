@@ -89,50 +89,55 @@ export default function ReportsPage() {
       <div className="px-6 py-4 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-900">Distribution by Shop</h3>
       </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Shop
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Total Distributed
-              </th>
-              {products.map(product => (
-                <th key={product.id} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {product.name}
+      <div className="relative">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                {/* Sticky first column on mobile */}
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide sticky left-0 bg-gray-50 z-10 min-w-[120px]">
+                  Shop
                 </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {shops.filter(shop => !shop.archived).map(shop => {
-              const shopData = byShopData.find(item => item.shop?.id === shop.id)
-              const productBreakdown = shopData?.product_breakdown || {}
-              
-              return (
-                <tr key={shop.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{shop.name}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-orange-500">
-                      {shopData?.total_distributed || 0}
-                    </div>
-                  </td>
-                  {products.map(product => (
-                    <td key={product.id} className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {productBreakdown[product.id] || 0}
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Total Distributed
+                </th>
+                {products.map(product => (
+                  <th key={product.id} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {product.name}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {shops.filter(shop => !shop.archived).map(shop => {
+                const shopData = byShopData.find(item => item.shop?.id === shop.id)
+                const productBreakdown = shopData?.product_breakdown || {}
+                
+                return (
+                  <tr key={shop.id}>
+                    <td className="px-4 py-3 sticky left-0 bg-white z-10">
+                      <div className="text-sm font-medium text-gray-900 whitespace-nowrap">{shop.name}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-orange-500">
+                        {shopData?.total_distributed || 0}
                       </div>
                     </td>
-                  ))}
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+                    {products.map(product => (
+                      <td key={product.id} className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {productBreakdown[product.id] || 0}
+                        </div>
+                      </td>
+                    ))}
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+        {/* Right fade indicator */}
+        <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-white to-transparent pointer-events-none" />
       </div>
     </div>
   )
@@ -142,70 +147,75 @@ export default function ReportsPage() {
       <div className="px-6 py-4 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-900">Activity by Product</h3>
       </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Product
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                SKU Code
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Received
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Distributed
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Spoiled
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Balance
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {products.map(product => {
-              const productData = byProductData.find(item => item.product?.id === product.id)
-              
-              return (
-                <tr key={product.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{product.sku_code}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-green-600">
-                      {productData?.total_received || 0}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-orange-500">
-                      {productData?.total_distributed || 0}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-red-600">
-                      {productData?.total_spoiled || 0}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className={`text-sm font-medium ${
-                      product.balance === 0 ? 'text-red-600' :
-                      product.balance <= 5 ? 'text-orange-500' : 'text-green-600'
-                    }`}>
-                      {formatNumber(product.balance)}
-                    </div>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+      <div className="relative">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                {/* Sticky first column on mobile */}
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide sticky left-0 bg-gray-50 z-10 min-w-[120px]">
+                  Product
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  SKU Code
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Received
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Distributed
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Spoiled
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Balance
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {products.map(product => {
+                const productData = byProductData.find(item => item.product?.id === product.id)
+                
+                return (
+                  <tr key={product.id}>
+                    <td className="px-4 py-3 sticky left-0 bg-white z-10">
+                      <div className="text-sm font-medium text-gray-900 whitespace-nowrap">{product.name}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">{product.sku_code}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-green-600">
+                        {productData?.total_received || 0}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-orange-500">
+                        {productData?.total_distributed || 0}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-red-600">
+                        {productData?.total_spoiled || 0}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className={`text-sm font-medium ${
+                        product.balance === 0 ? 'text-red-600' :
+                        product.balance <= 5 ? 'text-orange-500' : 'text-green-600'
+                      }`}>
+                        {formatNumber(product.balance)}
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+        {/* Right fade indicator */}
+        <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-white to-transparent pointer-events-none" />
       </div>
     </div>
   )

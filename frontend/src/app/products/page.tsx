@@ -242,88 +242,132 @@ export default function ProductsPage() {
             } : undefined}
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Product
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    SKU Code
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Cost Price
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Balance
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredProducts.map((product) => (
-                  <tr key={product.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">{product.sku_code}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {product.cost_price > 0 ? formatCurrency(product.cost_price) : '-'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className={`text-sm font-medium ${
-                        product.balance === 0 ? 'text-red-600' :
-                        product.balance <= 5 ? 'text-orange-500' : 'text-green-600'
-                      }`}>
-                        {formatNumber(product.balance)} units
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+          <>
+            {/* Mobile product cards */}
+            <div className="md:hidden space-y-2">
+              {filteredProducts.map((product) => (
+                <div key={product.id} className="bg-white border border-gray-200 rounded-xl p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{product.name}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{product.sku_code}</p>
+                    </div>
+                    <div className={`text-xl font-bold ml-3 flex-shrink-0 ${
+                      product.balance === 0 ? 'text-red-500' :
+                      product.balance <= 5 ? 'text-orange-500' : 'text-green-600'
+                    }`}>
+                      {formatNumber(product.balance)}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                    <span className="text-xs text-gray-400">
+                      {product.cost_price > 0 ? formatCurrency(product.cost_price) : 'No price set'}
+                    </span>
+                    <div className="flex gap-3">
                       <button
                         onClick={() => handleEdit(product)}
-                        className="text-orange-500 active:opacity-70 mr-3"
+                        className="text-sm text-orange-500 font-medium active:opacity-70"
                       >
                         Edit
                       </button>
                       {confirmDelete === product.id ? (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleDelete(product)}
-                            className="text-sm text-red-500 active:opacity-70"
-                          >
-                            Yes, delete
-                          </button>
-                          <button
-                            onClick={() => setConfirmDelete(null)}
-                            className="text-sm text-gray-600 active:opacity-70"
-                          >
-                            Cancel
-                          </button>
-                        </div>
+                        <span className="flex gap-2">
+                          <button onClick={() => handleDelete(product)} className="text-sm text-red-500 active:opacity-70">Confirm</button>
+                          <button onClick={() => setConfirmDelete(null)} className="text-sm text-gray-400 active:opacity-70">Cancel</button>
+                        </span>
                       ) : (
-                        <button
-                          onClick={() => setConfirmDelete(product.id)}
-                          className="text-red-500 text-sm active:opacity-70 ml-3"
-                        >
-                          Delete
-                        </button>
+                        <button onClick={() => setConfirmDelete(product.id)} className="text-sm text-red-500 active:opacity-70">Delete</button>
                       )}
-                      {deleteError && confirmDelete === product.id && (
-                        <p className="text-xs text-red-500 mt-1">{deleteError}</p>
-                      )}
-                    </td>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop table — hidden on mobile */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Product
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      SKU Code
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Cost Price
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Balance
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredProducts.map((product) => (
+                    <tr key={product.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">{product.sku_code}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {product.cost_price > 0 ? formatCurrency(product.cost_price) : '-'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className={`text-sm font-medium ${
+                          product.balance === 0 ? 'text-red-600' :
+                          product.balance <= 5 ? 'text-orange-500' : 'text-green-600'
+                        }`}>
+                          {formatNumber(product.balance)} units
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <button
+                          onClick={() => handleEdit(product)}
+                          className="text-orange-500 active:opacity-70 mr-3"
+                        >
+                          Edit
+                        </button>
+                        {confirmDelete === product.id ? (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleDelete(product)}
+                              className="text-sm text-red-500 active:opacity-70"
+                            >
+                              Yes, delete
+                            </button>
+                            <button
+                              onClick={() => setConfirmDelete(null)}
+                              className="text-sm text-gray-600 active:opacity-70"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmDelete(product.id)}
+                            className="text-red-500 text-sm active:opacity-70 ml-3"
+                          >
+                            Delete
+                          </button>
+                        )}
+                        {deleteError && confirmDelete === product.id && (
+                          <p className="text-xs text-red-500 mt-1">{deleteError}</p>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>

@@ -24,6 +24,7 @@ export default function MovementsPage() {
   const { products, shops, refreshMovements } = useStock()
   const [movements, setMovements] = useState<Movement[]>([])
   const [loading, setLoading] = useState(true)
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [filters, setFilters] = useState<Filters>({
     type: 'all',
     product_id: '',
@@ -77,6 +78,23 @@ export default function MovementsPage() {
     }))
   }
 
+  // Count active filters for the badge
+  const activeFilterCount = [
+    filters.type !== 'all' ? 1 : 0,
+    filters.product_id ? 1 : 0,
+    filters.shop_id ? 1 : 0,
+    filters.from ? 1 : 0,
+    filters.to ? 1 : 0,
+  ].reduce((a, b) => a + b, 0)
+
+  const clearFilters = () => setFilters({
+    type: 'all',
+    product_id: '',
+    shop_id: '',
+    from: '',
+    to: ''
+  })
+
   return (
     <div className="space-y-4">
       {/* Page Header */}
@@ -85,18 +103,49 @@ export default function MovementsPage() {
         <p className="text-sm text-gray-700 mt-2">Complete log of all stock movements</p>
       </div>
 
-      {/* Filter Bar */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <div className="space-y-4">
-          {/* Type Filter */}
+      {/* Filter toggle button */}
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm text-gray-500">{movements.length} movement{movements.length !== 1 ? 's' : ''}</p>
+        <div className="flex items-center gap-2">
+          {activeFilterCount > 0 && (
+            <button
+              onClick={clearFilters}
+              className="text-xs text-orange-500 active:opacity-70"
+            >
+              Clear
+            </button>
+          )}
+          <button
+            onClick={() => setFiltersOpen(!filtersOpen)}
+            className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border active:opacity-70 ${
+              activeFilterCount > 0
+                ? 'border-orange-500 text-orange-500 bg-orange-50'
+                : 'border-gray-200 text-gray-600 bg-white'
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
+            </svg>
+            Filters
+            {activeFilterCount > 0 && (
+              <span className="bg-orange-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Collapsible filter panel */}
+      {filtersOpen && (
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-4 space-y-3">
+          {/* Type */}
           <div>
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-              Type
-            </label>
+            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Type</label>
             <select
               value={filters.type}
               onChange={(e) => handleFilterChange('type', e.target.value)}
-              className="w-full px-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500"
+              className="w-full px-3 py-2.5 border border-gray-200 bg-white rounded-lg text-sm text-gray-900 focus:outline-none focus:border-orange-500"
             >
               <option value="all">All Types</option>
               <option value="opening">Opening</option>
@@ -107,20 +156,18 @@ export default function MovementsPage() {
             </select>
           </div>
 
-          {/* Product Filter */}
+          {/* Product */}
           <div>
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-              Product
-            </label>
+            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Product</label>
             <select
               value={filters.product_id}
               onChange={(e) => handleFilterChange('product_id', e.target.value)}
-              className="w-full px-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500"
+              className="w-full px-3 py-2.5 border border-gray-200 bg-white rounded-lg text-sm text-gray-900 focus:outline-none focus:border-orange-500"
             >
               <option value="">All Products</option>
               {Array.isArray(products) ? products.map((product: Product) => (
                 <option key={product.id} value={product.id}>
-                  {product.name} ({product.sku_code})
+                  {product.name}
                 </option>
               )) : (
                 <option value="">Loading products...</option>
@@ -128,68 +175,52 @@ export default function MovementsPage() {
             </select>
           </div>
 
-          {/* Shop Filter */}
+          {/* Shop */}
           <div>
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-              Shop
-            </label>
+            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Shop</label>
             <select
               value={filters.shop_id}
               onChange={(e) => handleFilterChange('shop_id', e.target.value)}
-              className="w-full px-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500"
+              className="w-full px-3 py-2.5 border border-gray-200 bg-white rounded-lg text-sm text-gray-900 focus:outline-none focus:border-orange-500"
             >
               <option value="">All Shops</option>
               {shops.filter(shop => !shop.archived).map(shop => (
-                <option key={shop.id} value={shop.id}>
-                  {shop.name}
-                </option>
+                <option key={shop.id} value={shop.id}>{shop.name}</option>
               ))}
             </select>
           </div>
 
-          {/* From Date */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-              From Date
-            </label>
-            <input
-              type="date"
-              value={filters.from}
-              onChange={(e) => handleFilterChange('from', e.target.value)}
-              className="w-full px-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500"
-            />
+          {/* Date range — side by side */}
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">From</label>
+              <input
+                type="date"
+                value={filters.from}
+                onChange={(e) => handleFilterChange('from', e.target.value)}
+                className="w-full px-3 py-2.5 border border-gray-200 bg-white rounded-lg text-sm text-gray-900 focus:outline-none focus:border-orange-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">To</label>
+              <input
+                type="date"
+                value={filters.to}
+                onChange={(e) => handleFilterChange('to', e.target.value)}
+                className="w-full px-3 py-2.5 border border-gray-200 bg-white rounded-lg text-sm text-gray-900 focus:outline-none focus:border-orange-500"
+              />
+            </div>
           </div>
 
-          {/* To Date */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-              To Date
-            </label>
-            <input
-              type="date"
-              value={filters.to}
-              onChange={(e) => handleFilterChange('to', e.target.value)}
-              className="w-full px-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500"
-            />
-          </div>
-        </div>
-
-        {/* Clear Filters */}
-        <div className="mt-4">
+          {/* Apply button */}
           <button
-            onClick={() => setFilters({
-              type: 'all',
-              product_id: '',
-              shop_id: '',
-              from: '',
-              to: ''
-            })}
-            className="px-4 py-2 text-gray-700 border border-gray-200 rounded-lg active:opacity-70"
+            onClick={() => setFiltersOpen(false)}
+            className="w-full h-10 bg-orange-500 text-white text-sm font-medium rounded-lg active:opacity-70"
           >
-            Clear Filters
+            Apply Filters
           </button>
         </div>
-      </div>
+      )}
 
       {/* Movements Table */}
       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
@@ -301,8 +332,8 @@ export default function MovementsPage() {
             </table>
           </div>
 
-          {/* Mobile cards — hidden on md and above */}
-          <div className="md:hidden space-y-2 p-4">
+          {/* Mobile cards — visible only on mobile */}
+          <div className="md:hidden space-y-2">
             {movements.map((movement) => (
               <div key={movement.id} className="bg-white border border-gray-100 rounded-xl px-4 py-3">
                 <div className="flex items-center justify-between mb-1">
@@ -316,10 +347,11 @@ export default function MovementsPage() {
                   <span className="text-xs text-gray-400">
                     {formatDate(movement.recorded_at)} · {formatTime(movement.recorded_at)}
                   </span>
-                  <span className="text-xs text-gray-400">
-                    {movement.shop?.name || movement.note || ''}
-                  </span>
+                  <span className="text-xs text-gray-400">{movement.shop?.name || ''}</span>
                 </div>
+                {movement.note && (
+                  <p className="text-xs text-gray-400 mt-1 italic">{movement.note}</p>
+                )}
               </div>
             ))}
           </div>
