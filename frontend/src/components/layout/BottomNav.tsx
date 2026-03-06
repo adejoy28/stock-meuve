@@ -1,8 +1,12 @@
-// BottomNav — Fixed bottom navigation, maximum 5 tabs
+// BottomNav — Fixed bottom navigation with 4 primary tabs + More sheet
+// More sheet contains Shops and Reports
+
 'use client'
 
+import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
+import MoreSheet from './MoreSheet'
 
 interface BottomNavProps {
   pendingSpoilsCount?: number
@@ -10,8 +14,12 @@ interface BottomNavProps {
 
 export default function BottomNav({ pendingSpoilsCount = 0 }: BottomNavProps) {
   const pathname = usePathname()
+  const [moreOpen, setMoreOpen] = useState(false)
 
-  // Maximum 5 tabs — Shops removed, accessible from Dashboard quick actions or Products page
+  // Pages that live inside the More sheet
+  const morePages = ['/shops', '/reports']
+  const moreIsActive = morePages.includes(pathname)
+
   const tabs = [
     {
       href: '/',
@@ -50,41 +58,53 @@ export default function BottomNav({ pendingSpoilsCount = 0 }: BottomNavProps) {
         </svg>
       ),
     },
-    {
-      href: '/reports',
-      label: 'Reports',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-      ),
-    },
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200">
-      <div className="flex justify-around items-center py-1 pb-safe">
-        {tabs.map((tab) => {
-          const isActive = pathname === tab.href
-          return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              className={`flex flex-col items-center justify-center py-2 px-2 min-w-0 flex-1 relative ${
-                isActive ? 'text-orange-500' : 'text-gray-400'
-              }`}
-            >
-              <div className="relative">
-                {tab.icon}
-                {tab.badge && (
-                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full" />
-                )}
-              </div>
-              <span className="text-xs mt-0.5 truncate w-full text-center">{tab.label}</span>
-            </Link>
-          )
-        })}
-      </div>
-    </nav>
+    <>
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200">
+        <div className="flex justify-around items-center py-1">
+
+          {/* Primary tabs */}
+          {tabs.map((tab) => {
+            const isActive = pathname === tab.href
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                className={`flex flex-col items-center justify-center py-2 px-2 flex-1 relative ${
+                  isActive ? 'text-orange-500' : 'text-gray-400'
+                }`}
+              >
+                <div className="relative">
+                  {tab.icon}
+                  {tab.badge && (
+                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full" />
+                  )}
+                </div>
+                <span className="text-xs mt-0.5 truncate w-full text-center">{tab.label}</span>
+              </Link>
+            )
+          })}
+
+          {/* More tab */}
+          <button
+            onClick={() => setMoreOpen(true)}
+            className={`flex flex-col items-center justify-center py-2 px-2 flex-1 ${
+              moreIsActive ? 'text-orange-500' : 'text-gray-400'
+            }`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <span className="text-xs mt-0.5">More</span>
+          </button>
+
+        </div>
+      </nav>
+
+      {/* More sheet */}
+      <MoreSheet isOpen={moreOpen} onClose={() => setMoreOpen(false)} />
+    </>
   )
 }
