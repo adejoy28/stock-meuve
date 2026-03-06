@@ -2,11 +2,19 @@
   command = "npm run build"
   publish = ".next"
 
+# Handle API calls to Render backend
 [[redirects]]
   from = "/api/*"
   to = "https://stock-meuve.onrender.com/api/:splat"
   status = 200
 
+# Handle Next.js client-side routing
+[[redirects]]
+  from = "/_next/*"
+  to = "/_next/:splat"
+  status = 200
+
+# Handle all other routes - serve index.html for SPA-like behavior
 [[redirects]]
   from = "/*"
   to = "/index.html"
