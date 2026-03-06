@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:3000', 'https://stock-meuve.onrender.com', 'https://YOUR_FRONTEND_URL.onrender.com'],
+    'allowed_origins' => ['http://localhost:3000', 'https://stock-meuve.onrender.com', 'https://stock-meuve-web.onrender.com'],
 
     'allowed_origins_patterns' => [],
 
