@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react'
 import { useStock } from '@/context/StockContext'
 import { createProduct, updateProduct, deleteProduct } from '@/lib/api'
 import { ApiErrorHandler } from '@/lib/errorHandler'
-import { formatNumber } from '@/lib/helpers'
+import { formatNumber, formatCurrency } from '@/lib/helpers'
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton'
 import EmptyState from '@/components/ui/EmptyState'
 import type { Product } from '@/types'
@@ -32,7 +32,6 @@ export default function ProductsPage() {
   const [error, setError] = useState('')
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null)
-  const formatCurrency = (num: number) => `₦${new Intl.NumberFormat('en-NG').format(num)}`
 
   // Filter products based on search term
   const filteredProducts = products.filter(product => 
@@ -251,6 +250,9 @@ export default function ProductsPage() {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-gray-900 truncate">{product.name}</p>
                       <p className="text-xs text-gray-400 mt-0.5">{product.sku_code}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {product.cost_price > 0 ? formatCurrency(product.cost_price) + ' / carton' : 'No price set'}
+                      </p>
                     </div>
                     <div className={`text-xl font-bold ml-3 shrink-0 ${
                       product.balance === 0 ? 'text-red-500' :
@@ -317,7 +319,9 @@ export default function ProductsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {product.cost_price > 0 ? formatCurrency(product.cost_price) : '-'}
+                          {product.cost_price > 0 ? formatCurrency(product.cost_price) : (
+                            <span className="text-gray-400">—</span>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

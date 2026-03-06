@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react'
 import { useStock } from '@/context/StockContext'
 import { getMovements } from '@/lib/api'
-import { formatDate, formatTime, formatNumber, extractArray } from '@/lib/helpers'
+import { formatDate, formatTime, formatNumber, formatCurrency, extractArray } from '@/lib/helpers'
 import TypeBadge from '@/components/ui/TypeBadge'
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton'
 import EmptyState from '@/components/ui/EmptyState'
@@ -94,6 +94,12 @@ export default function MovementsPage() {
     from: '',
     to: ''
   })
+
+  // Get cost price for a product by id
+  const getProductPrice = (productId: number): number => {
+    const product = products.find(p => p.id === productId)
+    return product?.cost_price || 0
+  }
 
   return (
     <div className="space-y-4">
@@ -264,6 +270,9 @@ export default function MovementsPage() {
                     Quantity
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Value
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Shop / Note
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -305,6 +314,17 @@ export default function MovementsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
+                      {(() => {
+                        const price = getProductPrice(movement.product?.id)
+                        const value = price * Math.abs(movement.qty)
+                        return price > 0 ? (
+                          <div className="text-sm text-gray-700">{formatCurrency(value)}</div>
+                        ) : (
+                          <div className="text-sm text-gray-300">—</div>
+                        )
+                      })()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
                         {movement.shop?.name || movement.note || '-'}
                         {movement.type === 'correction' && movement.note && (
@@ -339,10 +359,22 @@ export default function MovementsPage() {
                 <div className="flex items-center justify-between mb-1">
                   <TypeBadge type={movement.type} />
                   <span className={`text-sm font-bold ${movement.qty > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                    {movement.qty > 0 ? '+' : ''}{formatNumber(movement.qty)}
+                    {movement.qty > 0 ? '+' : ''}{formatNumber(movement.qty)} cartons
                   </span>
                 </div>
                 <p className="text-sm font-medium text-gray-900">{movement.product?.name}</p>
+
+                {/* Show total value for receipt and distribution movements */}
+                {['receipt', 'distribution', 'opening'].includes(movement.type) && (() => {
+                  const price = getProductPrice(movement.product?.id)
+                  const totalValue = price * Math.abs(movement.qty)
+                  return price > 0 ? (
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {formatCurrency(price)} × {Math.abs(movement.qty)} = <span className="font-medium text-gray-700">{formatCurrency(totalValue)}</span>
+                    </p>
+                  ) : null
+                })()}
+
                 <div className="flex items-center justify-between mt-1">
                   <span className="text-xs text-gray-400">
                     {formatDate(movement.recorded_at)} · {formatTime(movement.recorded_at)}

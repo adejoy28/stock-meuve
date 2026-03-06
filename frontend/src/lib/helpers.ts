@@ -90,10 +90,12 @@ export function movementTypeTextColor(type: string): string {
 
 // Format currency amount
 export function formatCurrency(amount: number): string {
-  if (amount === null || amount === undefined) return '₦0'
+  if (!amount) return '₦0'
   return new Intl.NumberFormat('en-NG', {
     style: 'currency',
-    currency: 'NGN'
+    currency: 'NGN',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(amount)
 }
 

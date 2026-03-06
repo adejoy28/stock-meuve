@@ -11,7 +11,7 @@ import {
   getReportByProduct, 
   getReportSpoils 
 } from '@/lib/api'
-import { formatNumber, extractArray } from '@/lib/helpers'
+import { formatNumber, formatCurrency, extractArray } from '@/lib/helpers'
 import StatCard from '@/components/ui/StatCard'
 import type { Product, Shop, Movement, ReportSummary } from '@/types'
 
@@ -52,6 +52,12 @@ export default function ReportsPage() {
     }
   }
 
+  // Get cost price for a product by id from context
+  const getProductPrice = (productId: number): number => {
+    const product = products.find(p => p.id === productId)
+    return product?.cost_price || 0
+  }
+
   const SummarySection = () => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -81,6 +87,20 @@ export default function ReportsPage() {
           color="green"
         />
       </div>
+
+      {/* Total stock value card */}
+      {(() => {
+        const totalValue = products.reduce((sum, product) => {
+          return sum + (product.cost_price * product.balance)
+        }, 0)
+        return totalValue > 0 ? (
+          <div className="bg-white border border-gray-200 rounded-xl p-4 col-span-2 md:col-span-1">
+            <div className="text-2xl font-bold text-gray-900">{formatCurrency(totalValue)}</div>
+            <div className="text-sm text-gray-600 mt-1">Total Stock Value</div>
+            <div className="text-xs text-gray-400 mt-0.5">cost price × balance</div>
+          </div>
+        ) : null
+      })()}
     </div>
   )
 
@@ -171,6 +191,12 @@ export default function ReportsPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Balance
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Unit Price
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Total Value
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -207,6 +233,30 @@ export default function ReportsPage() {
                       }`}>
                         {formatNumber(product.balance)}
                       </div>
+                    </td>
+                    {/* Unit price */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {(() => {
+                        const price = getProductPrice(product.id)
+                        return price > 0 ? (
+                          <div className="text-sm text-gray-700">{formatCurrency(price)}</div>
+                        ) : (
+                          <div className="text-sm text-gray-300">—</div>
+                        )
+                      })()}
+                    </td>
+                    {/* Total distributed value = unit price × total distributed qty */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {(() => {
+                        const price = getProductPrice(product.id)
+                        const distributed = productData?.total_distributed || 0
+                        const totalValue = price * Math.abs(distributed)
+                        return price > 0 && distributed > 0 ? (
+                          <div className="text-sm font-medium text-gray-900">{formatCurrency(totalValue)}</div>
+                        ) : (
+                          <div className="text-sm text-gray-300">—</div>
+                        )
+                      })()}
                     </td>
                   </tr>
                 )
