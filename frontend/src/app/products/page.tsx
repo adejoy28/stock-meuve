@@ -252,7 +252,7 @@ export default function ProductsPage() {
                       <p className="text-sm font-semibold text-gray-900 truncate">{product.name}</p>
                       <p className="text-xs text-gray-400 mt-0.5">{product.sku_code}</p>
                     </div>
-                    <div className={`text-xl font-bold ml-3 flex-shrink-0 ${
+                    <div className={`text-xl font-bold ml-3 shrink-0 ${
                       product.balance === 0 ? 'text-red-500' :
                       product.balance <= 5 ? 'text-orange-500' : 'text-green-600'
                     }`}>

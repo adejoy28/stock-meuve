@@ -137,7 +137,7 @@ export default function ReportsPage() {
           </table>
         </div>
         {/* Right fade indicator */}
-        <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-white to-transparent pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-6 bg-linear-to-l from-white to-transparent pointer-events-none" />
       </div>
     </div>
   )
@@ -215,7 +215,7 @@ export default function ReportsPage() {
           </table>
         </div>
         {/* Right fade indicator */}
-        <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-white to-transparent pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-6 bg-linear-to-l from-white to-transparent pointer-events-none" />
       </div>
     </div>
   )
