@@ -16,6 +16,7 @@ export default function BottomNav({ pendingSpoilsCount = 0 }: BottomNavProps) {
   const tabs = [
     { href: '/', label: 'Dashboard', icon: '📊' },
     { href: '/products', label: 'Products', icon: '📦' },
+    { href: '/shops', label: 'Shops', icon: '🏪' },
     { href: '/movements', label: 'Movements', icon: '📋' },
     { href: '/spoils', label: 'Spoils', icon: '⚠️', badge: pendingSpoilsCount > 0 },
     { href: '/reports', label: 'Reports', icon: '📈' },

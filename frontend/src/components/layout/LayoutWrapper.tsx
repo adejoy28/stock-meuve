@@ -29,6 +29,8 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
         return 'Dashboard'
       case '/products':
         return 'Products'
+      case '/shops':
+        return 'Shops'
       case '/movements':
         return 'Movements'
       case '/spoils':
