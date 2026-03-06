@@ -97,19 +97,19 @@ export const rejectSpoil = (id: number) => api.put(`/movements/spoil/${id}/rejec
 })
 
 // ── Reports ──
-export const getReportSummary = (period: string) => api.get('/reports/summary', { params: { period } }).catch(error => {
+export const getReportSummary = (params: Record<string, string>) => api.get('/reports/summary', { params }).catch(error => {
   throw ApiErrorHandler.handleError(error)
 })
 
-export const getReportByShop = (period: string) => api.get('/reports/by-shop', { params: { period } }).catch(error => {
+export const getReportByShop = (params: Record<string, string>) => api.get('/reports/by-shop', { params }).catch(error => {
   throw ApiErrorHandler.handleError(error)
 })
 
-export const getReportByProduct = (period: string) => api.get('/reports/by-product', { params: { period } }).catch(error => {
+export const getReportByProduct = (params: Record<string, string>) => api.get('/reports/by-product', { params }).catch(error => {
   throw ApiErrorHandler.handleError(error)
 })
 
-export const getReportSpoils = (period: string) => api.get('/reports/spoils', { params: { period } }).catch(error => {
+export const getReportSpoils = (params: Record<string, string>) => api.get('/reports/spoils', { params }).catch(error => {
   throw ApiErrorHandler.handleError(error)
 })
 

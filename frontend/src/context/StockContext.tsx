@@ -123,7 +123,7 @@ export function StockProvider({ children }: StockProviderProps) {
 
   const refreshReportSummary = async () => {
     try {
-      const response = await getReportSummary(period)
+      const response = await getReportSummary({ period })
       // Report summary is an object, not an array, so handle it differently
       setReportSummary(response.data)
     } catch (error) {

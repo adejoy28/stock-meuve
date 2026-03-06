@@ -16,22 +16,33 @@ use Illuminate\Http\Request;
 
 class ReportController extends Controller
 {
-    // Get period start date based on period type
-    private function getPeriodStart(string $period): Carbon
+    // Get date range - custom from/to takes priority over period
+    private function getDateRange(Request $request): array
     {
-        $now = Carbon::now();
-        
-        if ($period === 'today') {
-            return $now->copy()->startOfDay();
-        } elseif ($period === 'week') {
-            return $now->copy()->startOfWeek();
-        } elseif ($period === 'month') {
-            return $now->copy()->startOfMonth();
-        } elseif ($period === 'all') {
-            return Carbon::createFromTimestamp(0);
-        } else {
-            return $now->copy()->startOfDay();
+        $period = $request->get('period', 'today');
+
+        // Custom date range takes priority over period
+        if ($request->has('from') && $request->has('to')) {
+            return [
+                'start' => Carbon::parse($request->from)->startOfDay(),
+                'end'   => Carbon::parse($request->to)->endOfDay(),
+            ];
         }
+
+        $now = Carbon::now();
+
+        $start = match($period) {
+            'today' => $now->copy()->startOfDay(),
+            'week'  => $now->copy()->startOfWeek(),
+            'month' => $now->copy()->startOfMonth(),
+            'all'   => Carbon::createFromTimestamp(0),
+            default => $now->copy()->startOfDay(),
+        };
+
+        return [
+            'start' => $start,
+            'end'   => $now->copy()->endOfDay(),
+        ];
     }
 
     /**
@@ -44,11 +55,11 @@ class ReportController extends Controller
      */
     public function summary(Request $request)
     {
-        $period = $request->get('period', 'today');
-        $startDate = $this->getPeriodStart($period);
+        $range = $this->getDateRange($request);
 
         $movements = Movement::where('status', 'confirmed')
-            ->where('recorded_at', '>=', $startDate)
+            ->where('recorded_at', '>=', $range['start'])
+            ->where('recorded_at', '<=', $range['end'])
             ->get();
 
         $totalOpening = $movements->where('type', 'opening')->sum('qty');
@@ -59,7 +70,7 @@ class ReportController extends Controller
         $currentBalance = $totalOpening + $totalReceived - $totalDistributed - $totalSpoiled;
 
         return [
-            'period' => $period,
+            'period' => $request->get('period', 'today'),
             'total_opening' => $totalOpening,
             'total_received' => $totalReceived,
             'total_distributed' => $totalDistributed,
@@ -78,13 +89,13 @@ class ReportController extends Controller
      */
     public function byShop(Request $request)
     {
-        $period = $request->get('period', 'today');
-        $startDate = $this->getPeriodStart($period);
+        $range = $this->getDateRange($request);
 
         $movements = Movement::with(['shop', 'product'])
             ->where('status', 'confirmed')
             ->where('type', 'distribution')
-            ->where('recorded_at', '>=', $startDate)
+            ->where('recorded_at', '>=', $range['start'])
+            ->where('recorded_at', '<=', $range['end'])
             ->get()
             ->groupBy('shop_id');
 
@@ -119,12 +130,12 @@ class ReportController extends Controller
      */
     public function byProduct(Request $request)
     {
-        $period = $request->get('period', 'today');
-        $startDate = $this->getPeriodStart($period);
+        $range = $this->getDateRange($request);
 
         $movements = Movement::with('product')
             ->where('status', 'confirmed')
-            ->where('recorded_at', '>=', $startDate)
+            ->where('recorded_at', '>=', $range['start'])
+            ->where('recorded_at', '<=', $range['end'])
             ->get()
             ->groupBy('product_id');
 
@@ -164,13 +175,13 @@ class ReportController extends Controller
      */
     public function spoils(Request $request)
     {
-        $period = $request->get('period', 'today');
-        $startDate = $this->getPeriodStart($period);
+        $range = $this->getDateRange($request);
 
         $movements = Movement::with('product')
             ->where('status', 'confirmed')
             ->where('type', 'spoil')
-            ->where('recorded_at', '>=', $startDate)
+            ->where('recorded_at', '>=', $range['start'])
+            ->where('recorded_at', '<=', $range['end'])
             ->get()
             ->groupBy('product_id');
 
