@@ -28,3 +28,8 @@ StockFlow_AgentPlan.md
 bootstrap/appDe.php.txt
 backend.zip
 frontend/frontend!.zip
+backup/complete_stock_movements.sql
+backup/data.sqlite
+backup/result.zip
+backup/stockmeuve_backup_sqlite.sql
+backup/stockmeuve_backup.sql
