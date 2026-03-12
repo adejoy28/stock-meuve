@@ -14,6 +14,7 @@ export interface Shop {
   name: string
   archived: boolean
   total_distributed: number
+  total_value: number  // ← add this line
 }
 
 export interface Movement {
@@ -24,10 +25,13 @@ export interface Movement {
   reason?: string
   note?: string
   recorded_at: string
+  unit_cost: number | null       // ← null for pre-pricing records
+  selling_price: number | null   // ← null for pre-pricing records
   product: {
     id: number
     name: string
     sku_code: string
+    cost_price: number
   }
   shop?: {
     id: number

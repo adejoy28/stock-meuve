@@ -21,14 +21,27 @@ class ShopResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        // Distributions are stored as negative qty — use ABS to get positive count
+        $distributionMovements = $this->movements()
+            ->where('type', 'distribution')
+            ->where('status', 'confirmed');
+
+        $totalDistributed = abs($distributionMovements->sum('qty'));
+
+        // Monetary value = sum of (abs(qty) * cost_price) joined with products
+        $totalValue = $this->movements()
+            ->where('movements.type', 'distribution')
+            ->where('movements.status', 'confirmed')
+            ->join('products', 'movements.product_id', '=', 'products.id')
+            ->selectRaw('SUM(ABS(movements.qty) * COALESCE(products.cost_price, 0)) as total_value')
+            ->value('total_value') ?? 0;
+
         return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'archived' => $this->archived,
-            'total_distributed' => abs($this->movements()
-                ->where('type', 'distribution')
-                ->where('status', 'confirmed')
-                ->sum('qty')),
+            'id'                => $this->id,
+            'name'              => $this->name,
+            'archived'          => $this->archived,
+            'total_distributed' => $totalDistributed,
+            'total_value'       => (float) $totalValue,
         ];
     }
 }

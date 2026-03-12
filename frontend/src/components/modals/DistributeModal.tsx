@@ -8,12 +8,14 @@ import BaseModal from '@/components/ui/BaseModal'
 import { useStock } from '@/context/StockContext'
 import { recordDistribution, createShop } from '@/lib/api'
 import { ApiErrorHandler } from '@/lib/errorHandler'
+import { formatCurrency } from '@/lib/helpers'
 import type { Product, Shop } from '@/types'
 
 export default function DistributeModal() {
   const { activeModal, closeModal, products, shops, refreshProducts, refreshShops } = useStock()
   const [selectedShop, setSelectedShop] = useState('')
   const [distributionData, setDistributionData] = useState<Record<string, number>>({})
+  const [sellingPrices, setSellingPrices] = useState<Record<string, string>>({})
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -34,11 +36,19 @@ export default function DistributeModal() {
   // Calculate total quantity being distributed
   const totalQuantity = Object.values(distributionData).reduce((sum: number, qty: number) => sum + (qty || 0), 0)
 
+  // Add below totalQuantity
+  const totalValue = filteredProducts.reduce((sum, product) => {
+    const qty = distributionData[product.id.toString()] || 0
+    const price = parseFloat(sellingPrices[product.id.toString()]) || product.cost_price || 0
+    return sum + qty * price
+  }, 0)
+
   useEffect(() => {
     if (isOpen) {
       // Reset form when modal opens
       setSelectedShop('')
       setDistributionData({})
+      setSellingPrices({})   // ← add this
       setSearchTerm('')
       setShowNewShopForm(false)
       setNewShopName('')
@@ -79,6 +89,10 @@ export default function DistributeModal() {
     }))
   }
 
+  const handlePriceChange = (productId: string, value: string) => {
+    setSellingPrices(prev => ({ ...prev, [productId]: value }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -91,28 +105,37 @@ export default function DistributeModal() {
         return
       }
 
-      // Build array of products with qty > 0
-      const products = Object.entries(distributionData)
+      // NEW — correct field names + price fields
+      const productsPayload = Object.entries(distributionData)
         .filter(([_, qty]) => qty > 0)
-        .map(([productId, qty]) => ({
-          product_id: parseInt(productId),   // ← product_id not sku_id
-          qty: Math.round(parseFloat(qty.toString())),
-        }))
+        .map(([productId, qty]) => {
+          const rawPrice = sellingPrices[productId]
+          const product = products.find(p => p.id.toString() === productId)
+          const sellingPrice = rawPrice !== undefined && rawPrice !== ''
+            ? parseFloat(rawPrice)
+            : (product?.cost_price ?? null)
 
-      if (products.length === 0) {
+          return {
+            product_id:    parseInt(productId),
+            qty:           parseInt(qty.toString()),
+            selling_price: sellingPrice,
+          }
+        })
+
+      if (productsPayload.length === 0) {
         setError('Please enter quantities for at least one product')
         setLoading(false)
         return
       }
 
-      // shop_id at root, products array — not movements array
       await recordDistribution({
-        shop_id: parseInt(selectedShop),
-        products,
+        shop_id:  parseInt(selectedShop),
+        products: productsPayload,
+        note:     '',
       })
 
-      await refreshProducts()
-      closeModal()
+      closeModal()           // Close immediately — prevents re-submission
+      refreshProducts()      // Refresh in background — no await needed
     } catch (error) {
       const apiError = ApiErrorHandler.handleError(error)
       setError(apiError.message)
@@ -208,36 +231,72 @@ export default function DistributeModal() {
               </p>
             </div>
           ) : (
-            filteredProducts.map((product) => (
-              <div key={product.id} className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {product.name} ({product.sku_code})
-                </label>
-                <p className="text-xs text-gray-400">
-                  Available: {product.balance} units
-                </p>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max={product.balance}
-                  inputMode="numeric"
-                  value={distributionData[product.id.toString()] || ''}
-                  onChange={(e) => handleQtyChange(product.id.toString(), e.target.value)}
-                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-3 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500"
-                  placeholder="0"
-                />
-              </div>
-            ))
+            filteredProducts.map((product) => {
+              const qty = distributionData[product.id.toString()] || 0
+              const priceValue = sellingPrices[product.id.toString()] ?? (product.cost_price?.toString() || '')
+              const lineTotal = qty * (parseFloat(priceValue) || 0)
+
+              return (
+                <div key={product.id} className="border border-gray-100 rounded-xl p-3 space-y-2">
+                  {/* Product name + available */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">{product.name}</p>
+                      <p className="text-xs text-gray-400">{product.sku_code} · {product.balance} available</p>
+                    </div>
+                    {lineTotal > 0 && (
+                      <p className="text-xs font-semibold text-orange-500">{formatCurrency(lineTotal)}</p>
+                    )}
+                  </div>
+
+                  {/* Qty + Selling price — side by side */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">Qty (cartons)</label>
+                      <input
+                        type="number"
+                        step="1"
+                        min="0"
+                        max={product.balance}
+                        inputMode="numeric"
+                        value={distributionData[product.id.toString()] || ''}
+                        onChange={(e) => handleQtyChange(product.id.toString(), e.target.value)}
+                        className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500"
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">Selling price (₦)</label>
+                      <input
+                        type="number"
+                        step="1"
+                        min="0"
+                        inputMode="numeric"
+                        value={priceValue}
+                        onChange={(e) => handlePriceChange(product.id.toString(), e.target.value)}
+                        className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500"
+                        placeholder={product.cost_price?.toString() || '0'}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )
+            })
           )}
         </div>
 
-        {/* Footer with Total */}
+        {/* Footer */}
         <div className="border-t border-gray-200 pt-4">
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-sm text-gray-600">Total cartons to distribute:</span>
-            <span className="text-2xl font-bold text-orange-500">{totalQuantity}</span>
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-sm text-gray-500">Total cartons</span>
+            <span className="text-xl font-bold text-gray-900">{totalQuantity}</span>
           </div>
+          {totalValue > 0 && (
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-sm text-gray-500">Total value</span>
+              <span className="text-xl font-bold text-orange-500">{formatCurrency(totalValue)}</span>
+            </div>
+          )}
 
           <div className="space-y-3">
             <button

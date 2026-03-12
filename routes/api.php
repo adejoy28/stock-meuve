@@ -31,20 +31,16 @@ Route::apiResource('shops', ShopController::class);
 // Movements (listing only)
 Route::get('movements', [MovementController::class, 'index']);
 
-// Opening Stock
-Route::post('movements/opening', [OpeningStockController::class, 'store']);
+// Wrap all movement store routes with idempotency middleware
+Route::middleware(['idempotency'])->group(function () {
+    Route::post('movements/opening',       [OpeningStockController::class, 'store']);
+    Route::post('movements/receipt',       [ReceiptController::class, 'store']);
+    Route::post('movements/distribution',  [DistributionController::class, 'store']);
+    Route::post('movements/spoil',         [SpoilController::class, 'store']);
+    Route::post('movements/correction',    [CorrectionController::class, 'store']);
+});
 
-// Goods Receipt
-Route::post('movements/receipt', [ReceiptController::class, 'store']);
-
-// Distribution
-Route::post('movements/distribution', [DistributionController::class, 'store']);
-
-// Correction
-Route::post('movements/correction', [CorrectionController::class, 'store']);
-
-// Spoil Management
-Route::post('movements/spoil', [SpoilController::class, 'store']);
+// Spoil Management (confirm/reject don't need idempotency)
 Route::put('movements/spoil/{movement}/confirm', [SpoilController::class, 'confirm']);
 Route::put('movements/spoil/{movement}/reject', [SpoilController::class, 'reject']);
 

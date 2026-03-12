@@ -314,15 +314,20 @@ export default function MovementsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {(() => {
-                        const price = getProductPrice(movement.product?.id)
-                        const value = price * Math.abs(movement.qty)
-                        return price > 0 ? (
-                          <div className="text-sm text-gray-700">{formatCurrency(value)}</div>
-                        ) : (
-                          <div className="text-sm text-gray-300">—</div>
-                        )
-                      })()}
+                      {movement.type === 'distribution' && movement.selling_price != null ? (
+                        <div>
+                          <div className="text-sm text-gray-700">
+                            {formatCurrency(movement.selling_price * Math.abs(movement.qty))}
+                          </div>
+                          {movement.unit_cost != null && movement.unit_cost !== movement.selling_price && (
+                            <div className="text-xs text-gray-400">
+                              cost: {formatCurrency(movement.unit_cost * Math.abs(movement.qty))}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-gray-300">—</div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
@@ -364,16 +369,21 @@ export default function MovementsPage() {
                 </div>
                 <p className="text-sm font-medium text-gray-900">{movement.product?.name}</p>
 
-                {/* Show total value for receipt and distribution movements */}
-                {['receipt', 'distribution', 'opening'].includes(movement.type) && (() => {
-                  const price = getProductPrice(movement.product?.id)
-                  const totalValue = price * Math.abs(movement.qty)
-                  return price > 0 ? (
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {formatCurrency(price)} × {Math.abs(movement.qty)} = <span className="font-medium text-gray-700">{formatCurrency(totalValue)}</span>
-                    </p>
-                  ) : null
-                })()}
+                {/* Price line — only for distributions with stored prices */}
+                {movement.type === 'distribution' && movement.selling_price != null && (
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {formatCurrency(movement.selling_price)} × {Math.abs(movement.qty)} ={' '}
+                    <span className="font-medium text-gray-700">
+                      {formatCurrency(movement.selling_price * Math.abs(movement.qty))}
+                    </span>
+                    {/* Show cost vs selling margin if they differ */}
+                    {movement.unit_cost != null && movement.unit_cost !== movement.selling_price && (
+                      <span className="text-gray-400 ml-1">
+                        (cost {formatCurrency(movement.unit_cost)})
+                      </span>
+                    )}
+                  </p>
+                )}
 
                 <div className="flex items-center justify-between mt-1">
                   <span className="text-xs text-gray-400">

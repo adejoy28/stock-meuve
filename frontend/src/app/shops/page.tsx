@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react'
 import { useStock } from '@/context/StockContext'
 import { createShop, archiveShop } from '@/lib/api'
 import { getMovements } from '@/lib/api'
-import { formatDate, formatNumber, extractArray } from '@/lib/helpers'
+import { formatDate, formatNumber, formatCurrency, extractArray } from '@/lib/helpers'
 import { ApiErrorHandler } from '@/lib/errorHandler'
 import type { Shop, Movement } from '@/types'
 
@@ -158,22 +158,26 @@ export default function ShopsPage() {
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          {/* Three stats: cartons, value, last delivery */}
+          <div className="grid grid-cols-3 gap-3">
             <div>
-              <p className="text-sm text-gray-500">Total delivered</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-xs text-gray-400">Cartons</p>
+              <p className="text-xl font-bold text-gray-900">
                 {formatNumber(shop.total_distributed)}
               </p>
-              <p className="text-xs text-gray-500">cartons</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Last delivery</p>
-              <p className="text-lg font-semibold text-gray-900">
-                {/* Load last delivery on demand when expanded */}
-                {isExpanded && movements.length > 0 ? 
-                  formatDate(movements[0].recorded_at) : 
-                  'Show history'
-                }
+              <p className="text-xs text-gray-400">Value</p>
+              <p className="text-lg font-bold text-orange-500">
+                {shop.total_value > 0 ? formatCurrency(shop.total_value) : '—'}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400">Last delivery</p>
+              <p className="text-sm font-medium text-gray-700">
+                {isExpanded && movements.length > 0
+                  ? formatDate(movements[0].recorded_at)
+                  : '—'}
               </p>
             </div>
           </div>
@@ -185,18 +189,25 @@ export default function ShopsPage() {
             <h4 className="font-medium text-gray-900 mb-3">Delivery History</h4>
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {movements.map((movement) => (
-                <div key={movement.id} className="flex justify-between items-center text-sm bg-white p-2 rounded">
-                  <div>
-                    <span className="font-medium">{movement.product?.name}</span>
-                    <span className="text-gray-500 ml-2">({movement.product?.sku_code})</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-medium text-orange-500">
+                <div key={movement.id} className="bg-white rounded-xl p-3 border border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-gray-900">{movement.product?.name}</p>
+                    <p className="text-sm font-bold text-orange-500">
                       {formatNumber(Math.abs(movement.qty))} cartons
-                    </span>
-                    <div className="text-xs text-gray-500">
-                      {formatDate(movement.recorded_at)}
-                    </div>
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between mt-1">
+                    <p className="text-xs text-gray-400">{formatDate(movement.recorded_at)}</p>
+                    {/* Use stored selling_price — not computed from current product price */}
+                    {movement.selling_price != null ? (
+                      <p className="text-xs font-medium text-gray-600">
+                        {formatCurrency(movement.selling_price * Math.abs(movement.qty))}
+                      </p>
+                    ) : movement.product?.cost_price > 0 ? (
+                      <p className="text-xs text-gray-400 italic">
+                        {formatCurrency(movement.product.cost_price * Math.abs(movement.qty))} (est.)
+                      </p>
+                    ) : null}
                   </div>
                 </div>
               ))}

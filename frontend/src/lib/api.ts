@@ -4,10 +4,31 @@
 import axios from 'axios'
 import { ApiErrorHandler } from './errorHandler'
 
+// Add at top after imports
+let currentIdempotencyKey: string | null = null
+
+// Export functions to set/clear the key
+export function setIdempotencyKey(key: string) {
+  currentIdempotencyKey = key
+}
+
+export function clearIdempotencyKey() {
+  currentIdempotencyKey = null
+}
+
 // Base Axios instance — all API calls go through this
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
-  headers: { 'Content-Type': 'application/json' }
+  headers: { 'Content-Type': 'application/json' },
+  timeout: 15000, // 15 seconds — show error instead of hanging forever
+})
+
+// Request interceptor for idempotency key
+api.interceptors.request.use((config) => {
+  if (currentIdempotencyKey && ['post', 'put', 'patch'].includes(config.method || '')) {
+    config.headers['X-Idempotency-Key'] = currentIdempotencyKey
+  }
+  return config
 })
 
 // Response interceptor for error handling
@@ -97,19 +118,19 @@ export const rejectSpoil = (id: number) => api.put(`/movements/spoil/${id}/rejec
 })
 
 // ── Reports ──
-export const getReportSummary = (params: Record<string, string>) => api.get('/reports/summary', { params }).catch(error => {
+export const getReportSummary = (params: Record<string, string | undefined>) => api.get('/reports/summary', { params }).catch(error => {
   throw ApiErrorHandler.handleError(error)
 })
 
-export const getReportByShop = (params: Record<string, string>) => api.get('/reports/by-shop', { params }).catch(error => {
+export const getReportByShop = (params: Record<string, string | undefined>) => api.get('/reports/by-shop', { params }).catch(error => {
   throw ApiErrorHandler.handleError(error)
 })
 
-export const getReportByProduct = (params: Record<string, string>) => api.get('/reports/by-product', { params }).catch(error => {
+export const getReportByProduct = (params: Record<string, string | undefined>) => api.get('/reports/by-product', { params }).catch(error => {
   throw ApiErrorHandler.handleError(error)
 })
 
-export const getReportSpoils = (params: Record<string, string>) => api.get('/reports/spoils', { params }).catch(error => {
+export const getReportSpoils = (params: Record<string, string | undefined>) => api.get('/reports/spoils', { params }).catch(error => {
   throw ApiErrorHandler.handleError(error)
 })
 

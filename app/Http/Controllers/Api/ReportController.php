@@ -149,16 +149,30 @@ class ReportController extends Controller
             $spoiled = abs($productMovements->where('type', 'spoil')->sum('qty'));
             $balance = $received - $distributed - $spoiled;
 
+            // After existing calculations, add:
+            $totalSellingValue = $productMovements
+                ->where('type', 'distribution')
+                ->filter(fn($m) => $m->selling_price !== null)
+                ->sum(fn($m) => abs($m->qty) * $m->selling_price);
+
+            $totalCostValue = $productMovements
+                ->where('type', 'distribution')
+                ->filter(fn($m) => $m->unit_cost !== null)
+                ->sum(fn($m) => abs($m->qty) * $m->unit_cost);
+
             $result[] = [
-                'product' => [
+                'product'              => [
                     'id' => $product->id,
                     'name' => $product->name,
                     'sku_code' => $product->sku_code,
                 ],
-                'total_received' => $received,       // ← was 'received'
-                'total_distributed' => $distributed, // ← was 'distributed'
-                'total_spoiled' => $spoiled,         // ← was 'spoiled'
-                'balance' => $balance,
+                'total_received'       => $received,
+                'total_distributed'    => $distributed,
+                'total_spoiled'        => $spoiled,
+                'balance'              => $balance,
+                'total_selling_value'  => $totalSellingValue,   // ← what shops owe you
+                'total_cost_value'     => $totalCostValue,       // ← what it cost you
+                'gross_margin'         => $totalSellingValue - $totalCostValue, // ← profit
             ];
         }
 
@@ -203,12 +217,10 @@ class ReportController extends Controller
                     'name' => $product->name,
                     'sku_code' => $product->sku_code,
                 ],
-                'reason_breakdown' => [              // ← new nested structure
-                    'damaged' => abs($damaged),      // ← was 'damaged_qty' at root
-                    'expired' => abs($expired),      // ← was 'expired_qty' at root
-                    'returned' => abs($returned),    // ← was 'returned_qty' at root
-                ],
-                'total_spoiled' => $total,           // ← was 'total'
+                'damaged_qty' => abs($damaged),
+                'expired_qty' => abs($expired),
+                'returned_qty' => abs($returned),
+                'total' => $total,
             ];
         }
 

@@ -5,6 +5,7 @@ export interface ApiError {
   status?: number
   message: string
   details?: any
+  type?: string
 }
 
 export class ApiErrorHandler {
@@ -13,8 +14,9 @@ export class ApiErrorHandler {
     if (!error.response) {
       if (error.code === 'ECONNABORTED') {
         return {
-          message: 'Request timeout. Please try again.',
-          status: 408
+          message: 'Request timed out. Please check your connection and try again.',
+          status: 0,
+          type: 'timeout'
         }
       }
       return {

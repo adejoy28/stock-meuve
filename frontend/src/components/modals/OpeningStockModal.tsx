@@ -72,8 +72,8 @@ export default function OpeningStockModal() {
       // Send all products in a single request
       await recordOpening({ products })
 
-      await refreshProducts()
-      closeModal()
+      closeModal()           // Close immediately — prevents re-submission
+      refreshProducts()      // Refresh in background — no await needed
     } catch (error) {
       const apiError = ApiErrorHandler.handleError(error)
       if (ApiErrorHandler.isConflictError(apiError)) {

@@ -17,11 +17,17 @@ class Movement extends Model
     // Fields that can be mass assigned
     protected $fillable = [
         'product_id', 'type', 'qty', 'shop_id',
-        'reason', 'status', 'note', 'recorded_at'
+        'reason', 'status', 'note', 'recorded_at',
+        'unit_cost',       // ← add
+        'selling_price',   // ← add
     ];
     
-    // Cast recorded_at to datetime
-    protected $casts = ['recorded_at' => 'datetime'];
+    // Cast recorded_at to datetime and price fields to float
+    protected $casts = [
+        'recorded_at'   => 'datetime',
+        'unit_cost'     => 'float',      // ← add
+        'selling_price' => 'float',      // ← add
+    ];
 
     // Relationship: Movement belongs to a Product
     public function product(): BelongsTo {

@@ -17,6 +17,7 @@ export default function QuickActions({ onAction }: QuickActionsProps) {
     { id: 'receipt', label: 'Receive Goods' },
     { id: 'distribution', label: 'Distribute' },
     { id: 'spoil', label: 'Record Spoil' },
+    { id: 'correction', label: 'Stock Correction' },
   ]
 
   const handleAction = (actionId: string) => {
@@ -84,7 +85,8 @@ function getActionIcon(actionId: string): string {
     opening: '📊',
     receipt: '📦',
     distribution: '🚚',
-    spoil: '⚠️'
+    spoil: '⚠️',
+    correction: '✏️'
   }
   return icons[actionId as keyof typeof icons] || '📋'
 }

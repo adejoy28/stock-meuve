@@ -71,7 +71,7 @@ export default function MoreSheet({ isOpen, onClose }: MoreSheetProps) {
                 }`}
               >
                 {/* Icon container */}
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
                   isActive ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600'
                 }`}>
                   {item.icon}
@@ -86,7 +86,7 @@ export default function MoreSheet({ isOpen, onClose }: MoreSheetProps) {
                 </div>
 
                 {/* Chevron */}
-                <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-gray-300 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
               </Link>

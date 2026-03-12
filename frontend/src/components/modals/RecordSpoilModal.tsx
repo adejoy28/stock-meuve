@@ -52,9 +52,9 @@ export default function RecordSpoilModal() {
         // remove recorded_at — backend sets it automatically
       })
 
-      await refreshProducts()
+      closeModal()           // Close immediately — prevents re-submission
+      refreshProducts()      // Refresh in background — no await needed
       setPendingSpoilsCount(pendingSpoilsCount + 1)
-      closeModal()
     } catch (error) {
       const apiError = ApiErrorHandler.handleError(error)
       
