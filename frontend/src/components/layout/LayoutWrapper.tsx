@@ -8,6 +8,7 @@ import { useStock } from '@/context/StockContext'
 import TopBar from './TopBar'
 import BottomNav from './BottomNav'
 import QuickActions from './QuickActions'
+import InstallPrompt from '@/components/ui/InstallPrompt'
 import OpeningStockModal from '@/components/modals/OpeningStockModal'
 import ReceiveGoodsModal from '@/components/modals/ReceiveGoodsModal'
 import DistributeModal from '@/components/modals/DistributeModal'
@@ -43,12 +44,14 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <TopBar 
-        title={getPageTitle()}
-        period={period}
-        onPeriodChange={setPeriod}
-      />
+    <>
+      <InstallPrompt />
+      <div className="min-h-screen bg-white">
+        <TopBar 
+          title={getPageTitle()}
+          period={period}
+          onPeriodChange={setPeriod}
+        />
       <main className="px-4 pt-4 pb-24">
         {children}
       </main>
@@ -61,6 +64,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
       <DistributeModal />
       <RecordSpoilModal />
       <CorrectionModal />
-    </div>
+      </div>
+    </>
   )
 }
