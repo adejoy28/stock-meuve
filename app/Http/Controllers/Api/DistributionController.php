@@ -73,6 +73,7 @@ class DistributionController extends Controller
                 'note'          => $validated['note'] ?? null,
                 'unit_cost'     => $unitCost,              // ← snapshot at time of recording
                 'selling_price' => $sellingPrice,          // ← what shop was charged
+                'recorded_at'   => now()
             ]);
         }
 
