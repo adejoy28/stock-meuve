@@ -48,7 +48,7 @@ export default function InstallPrompt() {
     <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3 shadow-sm">
       {/* App icon */}
       <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center flex-shrink-0">
-        <span className="text-white text-sm font-bold">S</span>
+        <span className="text-white text-sm font-bold">CHB</span>
       </div>
 
       {/* Text */}

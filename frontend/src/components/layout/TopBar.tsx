@@ -28,7 +28,7 @@ export default function TopBar({ title, period, onPeriodChange }: TopBarProps) {
         <div className="flex items-center gap-2">
           {/* Logo mark — orange circle with S */}
           <div className="w-7 h-7 bg-orange-500 rounded-lg flex items-center justify-center shrink-0">
-            <span className="text-white text-xs font-bold">S</span>
+            <span className="text-white text-xs font-bold"> CHB </span>
           </div>
           <span className="text-base font-bold text-gray-900 tracking-tight">Charly HB</span>
         </div>
