@@ -39,7 +39,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
       case '/shops':
         return 'Shops'
       default:
-        return 'Stockmeuve'
+        return 'Charly HB'
     }
   }
 

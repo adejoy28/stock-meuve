@@ -17,22 +17,22 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Stockmeuve',
-  description: 'Stock and inventory management',
+  title: 'Charly HB',
+  description: 'Stock and inventory management for Charly HB',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Stockmeuve',
+    title: 'Charly HB',
   },
   formatDetection: {
     telephone: false,
   },
   openGraph: {
     type: 'website',
-    siteName: 'Stockmeuve',
-    title: 'Stockmeuve',
-    description: 'Stock and inventory management',
+    siteName: 'Charly HB',
+    title: 'Charly HB',
+    description: 'Stock and inventory management for Charly HB',
   },
 }
 

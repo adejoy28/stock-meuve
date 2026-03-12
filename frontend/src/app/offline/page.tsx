@@ -1,4 +1,4 @@
-// offline/page.tsx — Shown when user has no internet connection
+// offline/page.tsx — Shown when user has no internet connection for Charly HB
 'use client'
 
 export default function OfflinePage() {

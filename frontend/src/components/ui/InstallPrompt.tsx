@@ -53,7 +53,7 @@ export default function InstallPrompt() {
 
       {/* Text */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-gray-900">Install Stockmeuve</p>
+        <p className="text-sm font-semibold text-gray-900">Install Charly HB</p>
         <p className="text-xs text-gray-400">Add to home screen for quick access</p>
       </div>
 

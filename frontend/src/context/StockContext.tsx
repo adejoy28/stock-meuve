@@ -1,4 +1,4 @@
-// StockContext — Global state for Stockmeuve application
+// StockContext — Global state for Charly HB application
 // Provides: SKUs, shops, period, modal management, and data sharing across components
 
 'use client'

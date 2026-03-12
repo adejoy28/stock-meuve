@@ -30,7 +30,7 @@ export default function TopBar({ title, period, onPeriodChange }: TopBarProps) {
           <div className="w-7 h-7 bg-orange-500 rounded-lg flex items-center justify-center shrink-0">
             <span className="text-white text-xs font-bold">S</span>
           </div>
-          <span className="text-base font-bold text-gray-900 tracking-tight">Stockmeuve</span>
+          <span className="text-base font-bold text-gray-900 tracking-tight">Charly HB</span>
         </div>
         <span className="text-xs text-gray-400">{today}</span>
       </div>
