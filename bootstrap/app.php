@@ -3,11 +3,6 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Illuminate\Database\QueryException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -22,56 +17,102 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-
-        // 1. Force JSON for API routes
-        $exceptions->shouldRenderJsonWhen(function (Request $request) {
-            return $request->is('api/*') || $request->expectsJson();
+        // Handle AuthenticationException for API routes to prevent "Route [login] not defined"
+        $exceptions->render(function (
+            \Illuminate\Auth\AuthenticationException $e,
+            \Illuminate\Http\Request $request
+        ) {
+            if ($request->is('api/*') || $request->wantsJson()) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'You are not logged in. Please sign in to continue.',
+                ], 401);
+            }
         });
 
-        // 2. Custom Rendering Logic (Replaces your old Handler.php)
-        $exceptions->render(function (Throwable $e, Request $request) {
+        // Handle all API exceptions with clean JSON responses
+        $exceptions->render(function (Throwable $e, \Illuminate\Http\Request $request) {
+            if (!($request->is('api/*') || $request->wantsJson())) {
+                return null; // Let Laravel handle non-API requests
+            }
 
-            if ($e instanceof ValidationException) {
+            // 403 — logged in but not allowed
+            if ($e instanceof \Illuminate\Auth\Access\AuthorizationException) {
                 return response()->json([
-                    'status' => 'error',
-                    'message' => 'The given data was invalid.',
-                    'data' => [
-                        'errors' => $e->errors(),
-                    ]
+                    'status'  => 'error',
+                    'message' => 'You do not have permission to perform this action.',
+                ], 403);
+            }
+
+            // 422 — validation failed
+            if ($e instanceof \Illuminate\Validation\ValidationException) {
+                $messages = collect($e->errors())
+                    ->flatten()
+                    ->implode(' ');
+
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => $messages,
+                    'errors'  => $e->errors(),
                 ], 422);
             }
 
-            if ($e instanceof ModelNotFoundException) {
+            // 404 — specific record not found
+            if ($e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
+                $model = class_basename($e->getModel());
                 return response()->json([
-                    'status' => 'error',
-                    'message' => 'Resource not found.',
-                    'data' => [],
+                    'status'  => 'error',
+                    'message' => "{$model} not found.",
                 ], 404);
             }
 
-            if ($e instanceof NotFoundHttpException) {
+            // 404 — route does not exist
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) {
                 return response()->json([
-                    'status' => 'error',
-                    'message' => 'The requested resource was not found.',
-                    'data' => [],
+                    'status'  => 'error',
+                    'message' => 'The requested endpoint does not exist.',
                 ], 404);
             }
 
-            if ($e instanceof QueryException && $e->getCode() === '23000') {
+            // 405 — wrong HTTP method
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException) {
                 return response()->json([
-                    'status' => 'error',
-                    'message' => 'Database constraint violation.',
-                    'data' => [],
-                ], 409);
+                    'status'  => 'error',
+                    'message' => 'This request method is not supported.',
+                ], 405);
             }
 
-            // 3. Global Production Safety Net (Prevents Stack Traces)
-            if (!config('app.debug')) {
+            // 429 — too many requests
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException) {
+                $retryAfter = $e->getHeaders()['Retry-After'] ?? 60;
                 return response()->json([
-                    'status' => 'error',
-                    'message' => 'Something went wrong, please try again.',
-                    'data' => [],
+                    'status'  => 'error',
+                    'message' => "Too many attempts. Please wait {$retryAfter} seconds before trying again.",
+                ], 429);
+            }
+
+            // Database errors
+            if ($e instanceof \Illuminate\Database\QueryException) {
+                if (config('app.debug')) {
+                    return response()->json([
+                        'status'  => 'error',
+                        'message' => $e->getMessage(),
+                    ], 500);
+                }
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'A database error occurred. Please try again.',
                 ], 500);
             }
+
+            // Everything else — 500
+            $message = config('app.debug')
+                ? $e->getMessage()
+                : 'Something went wrong on our end. Please try again.';
+
+            return response()->json([
+                'status'  => 'error',
+                'message' => $message,
+            ], 500);
         });
     })->create();

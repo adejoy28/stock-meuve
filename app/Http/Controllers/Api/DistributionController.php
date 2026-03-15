@@ -37,10 +37,17 @@ class DistributionController extends Controller
             'note'                       => 'nullable|string|max:500',
         ]);
 
+        // Validate shop belongs to this user
+        $shop = \App\Models\Shop::where('id', $validated['shop_id'])
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
+
         $movements = [];
 
         foreach ($validated['products'] as $productData) {
-            $product = Product::find($productData['product_id']);
+            $product = Product::where('id', $productData['product_id'])
+                ->where('user_id', $request->user()->id)
+                ->firstOrFail();
             $currentBalance = $product->balance();
 
             // Check sufficient stock
@@ -65,6 +72,7 @@ class DistributionController extends Controller
                 : $unitCost;
 
             $movements[] = Movement::create([
+                'user_id'       => $request->user()->id,  // ← add this
                 'product_id'    => $productData['product_id'],
                 'type'          => 'distribution',
                 'qty'           => -$productData['qty'],   // Negative = outgoing

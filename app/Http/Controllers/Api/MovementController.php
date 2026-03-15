@@ -26,7 +26,8 @@ class MovementController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Movement::with(['product', 'shop']);
+        $query = Movement::with(['product', 'shop'])
+            ->where('movements.user_id', $request->user()->id); // scope to user
 
         // Apply filters
         if ($request->has('type')) {

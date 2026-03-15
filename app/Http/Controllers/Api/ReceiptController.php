@@ -38,6 +38,7 @@ class ReceiptController extends Controller
         // Check if receipt already recorded today
         $today = Carbon::today();
         $existingReceipt = Movement::where('type', 'receipt')
+            ->where('user_id', $request->user()->id)
             ->whereDate('recorded_at', $today)
             ->first();
 
@@ -53,6 +54,7 @@ class ReceiptController extends Controller
 
         foreach ($validated['products'] as $productData) {
             $movements[] = Movement::create([
+                'user_id' => $request->user()->id,
                 'product_id' => $productData['product_id'],
                 'type' => 'receipt',
                 'qty' => $productData['qty'],

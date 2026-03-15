@@ -34,6 +34,7 @@ class SpoilController extends Controller
         ]);
 
         $movement = Movement::create([
+            'user_id' => $request->user()->id,
             'product_id' => $validated['product_id'],
             'type' => 'spoil',
             'qty' => -$validated['qty'], // Negative for outgoing
@@ -58,8 +59,10 @@ class SpoilController extends Controller
      * @param \App\Models\Movement $movement
      * @return \Illuminate\Http\JsonResponse
      */
-    public function confirm(Movement $movement)
+    public function confirm(Request $request, Movement $movement)
     {
+        abort_if($movement->user_id !== $request->user()->id, 403, 'Unauthorized');
+        
         if ($movement->type !== 'spoil' || $movement->status !== 'pending') {
             return response()->json([
                 'status' => 'error',
@@ -85,8 +88,10 @@ class SpoilController extends Controller
      * @param \App\Models\Movement $movement
      * @return \Illuminate\Http\JsonResponse
      */
-    public function reject(Movement $movement)
+    public function reject(Request $request, Movement $movement)
     {
+        abort_if($movement->user_id !== $request->user()->id, 403, 'Unauthorized');
+        
         if ($movement->type !== 'spoil' || $movement->status !== 'pending') {
             return response()->json([
                 'status' => 'error',

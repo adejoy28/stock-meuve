@@ -40,6 +40,7 @@ class OpeningStockController extends Controller
         foreach ($validated['products'] as $productData) {
             // Check if opening stock already recorded for this product today
             $existing = Movement::where('product_id', $productData['product_id'])
+                ->where('user_id', $request->user()->id)
                 ->where('type', 'opening')
                 ->whereDate('recorded_at', $today)
                 ->first();
@@ -53,6 +54,7 @@ class OpeningStockController extends Controller
             }
 
             $movements[] = Movement::create([
+                'user_id' => $request->user()->id,
                 'product_id' => $productData['product_id'],
                 'type' => 'opening',
                 'qty' => $productData['qty'],

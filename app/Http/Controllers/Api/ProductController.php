@@ -25,9 +25,9 @@ class ProductController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::all();
+        $products = Product::where('user_id', $request->user()->id)->get();
         return response()->json([
             'status' => 'success',
             'message' => 'Products retrieved successfully.',
@@ -51,6 +51,7 @@ class ProductController extends Controller
             'cost_price' => 'nullable|numeric|min:0',
         ]);
 
+        $validated['user_id'] = $request->user()->id;
         $product = Product::create($validated);
         
         return response()->json([
@@ -71,6 +72,8 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
+        abort_if($product->user_id !== $request->user()->id, 403, 'Unauthorized');
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'sku_code' => [
@@ -98,8 +101,10 @@ class ProductController extends Controller
      * @param \App\Models\Product $product
      * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy(Product $product)
+    public function destroy(Request $request, Product $product)
     {
+        abort_if($product->user_id !== $request->user()->id, 403, 'Unauthorized');
+        
         if ($product->movements()->exists()) {
             return response()->json([
                 'status' => 'error',
@@ -125,8 +130,10 @@ class ProductController extends Controller
      * @param \App\Models\Product $product
      * @return \Illuminate\Http\JsonResponse
      */
-    public function show(Product $product)
+    public function show(Request $request, Product $product)
     {
+        abort_if($product->user_id !== $request->user()->id, 403, 'Unauthorized');
+        
         return response()->json([
             'status' => 'success',
             'message' => 'Product retrieved successfully.',

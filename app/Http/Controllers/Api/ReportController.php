@@ -57,17 +57,20 @@ class ReportController extends Controller
     {
         $range = $this->getDateRange($request);
 
-        $movements = Movement::where('status', 'confirmed')
+        // Add user scope
+        $movements = Movement::where('user_id', $request->user()->id)
+            ->where('status', 'confirmed')
             ->where('recorded_at', '>=', $range['start'])
             ->where('recorded_at', '<=', $range['end'])
             ->get();
 
-        $totalOpening = $movements->where('type', 'opening')->sum('qty');
-        $totalReceived = $movements->where('type', 'receipt')->sum('qty');
-        $totalDistributed = $movements->where('type', 'distribution')->sum('qty');
-        $totalSpoiled = abs($movements->where('type', 'spoil')->sum('qty'));
-        
-        $currentBalance = $totalOpening + $totalReceived - $totalDistributed - $totalSpoiled;
+        $totalOpening    = (float) $movements->where('type', 'opening')->sum('qty');
+        $totalReceived   = (float) $movements->where('type', 'receipt')->sum('qty');
+        $totalDistributed = (float) abs($movements->where('type', 'distribution')->sum('qty'));
+        $totalSpoiled    = (float) abs($movements->where('type', 'spoil')->sum('qty'));
+        $totalCorrections = (float) $movements->where('type', 'correction')->sum('qty');
+
+        $currentBalance = $totalOpening + $totalReceived - $totalDistributed - $totalSpoiled + $totalCorrections;
 
         return [
             'period' => $request->get('period', 'today'),
@@ -75,6 +78,7 @@ class ReportController extends Controller
             'total_received' => $totalReceived,
             'total_distributed' => $totalDistributed,
             'total_spoiled' => $totalSpoiled,
+            'total_corrections' => $totalCorrections,
             'current_balance' => $currentBalance,
         ];
     }
@@ -92,6 +96,7 @@ class ReportController extends Controller
         $range = $this->getDateRange($request);
 
         $movements = Movement::with(['shop', 'product'])
+            ->where('user_id', $request->user()->id)
             ->where('status', 'confirmed')
             ->where('type', 'distribution')
             ->where('recorded_at', '>=', $range['start'])
@@ -130,12 +135,13 @@ class ReportController extends Controller
      */
     public function byProduct(Request $request)
     {
-        $range = $this->getDateRange($request);
+        $period = $request->get('period', 'today');
+        $startDate = $this->getPeriodStart($period);
 
         $movements = Movement::with('product')
+            ->where('user_id', $request->user()->id)
             ->where('status', 'confirmed')
-            ->where('recorded_at', '>=', $range['start'])
-            ->where('recorded_at', '<=', $range['end'])
+            ->where('recorded_at', '>=', $startDate)
             ->get()
             ->groupBy('product_id');
 
@@ -143,40 +149,74 @@ class ReportController extends Controller
 
         foreach ($movements as $productId => $productMovements) {
             $product = $productMovements->first()->product;
-            
-            $received = $productMovements->where('type', 'receipt')->sum('qty');
-            $distributed = $productMovements->where('type', 'distribution')->sum('qty');
-            $spoiled = abs($productMovements->where('type', 'spoil')->sum('qty'));
-            $balance = $received - $distributed - $spoiled;
+            if (!$product) continue;
 
-            // After existing calculations, add:
-            $totalSellingValue = $productMovements
-                ->where('type', 'distribution')
+            // Each movement type — use abs() so values are always positive
+            $opening    = $productMovements->where('type', 'opening')->sum('qty');
+            $received   = $productMovements->where('type', 'receipt')->sum('qty');
+            $distributed = abs($productMovements->where('type', 'distribution')->sum('qty')); // stored negative
+            $spoiled    = abs($productMovements->where('type', 'spoil')->sum('qty'));          // stored negative
+            $corrections = $productMovements->where('type', 'correction')->sum('qty');        // can be +/-
+
+            // True balance for the period
+            $periodBalance = $opening + $received - $distributed - $spoiled + $corrections;
+
+            // Price history from stored movement snapshots
+            $distributionMovements = $productMovements->where('type', 'distribution');
+
+            $totalSellingValue = $distributionMovements
                 ->filter(fn($m) => $m->selling_price !== null)
                 ->sum(fn($m) => abs($m->qty) * $m->selling_price);
 
-            $totalCostValue = $productMovements
-                ->where('type', 'distribution')
+            $totalCostValue = $distributionMovements
                 ->filter(fn($m) => $m->unit_cost !== null)
                 ->sum(fn($m) => abs($m->qty) * $m->unit_cost);
 
+            $grossMargin = $totalSellingValue - $totalCostValue;
+
+            // Price at time of last distribution in this period
+            $lastDistribution = $distributionMovements
+                ->sortByDesc('recorded_at')
+                ->first();
+
             $result[] = [
-                'product'              => [
-                    'id' => $product->id,
-                    'name' => $product->name,
-                    'sku_code' => $product->sku_code,
+                'product' => [
+                    'id'         => $product->id,
+                    'name'       => $product->name,
+                    'sku_code'   => $product->sku_code,
+                    'cost_price' => (float) $product->cost_price,
                 ],
-                'total_received'       => $received,
-                'total_distributed'    => $distributed,
-                'total_spoiled'        => $spoiled,
-                'balance'              => $balance,
-                'total_selling_value'  => $totalSellingValue,   // ← what shops owe you
-                'total_cost_value'     => $totalCostValue,       // ← what it cost you
-                'gross_margin'         => $totalSellingValue - $totalCostValue, // ← profit
+                'opening'              => (float) $opening,
+                'received'             => (float) $received,
+                'distributed'          => (float) $distributed,
+                'spoiled'              => (float) $spoiled,
+                'corrections'          => (float) $corrections,
+                'period_balance'       => (float) $periodBalance,
+                'total_selling_value'  => (float) $totalSellingValue,
+                'total_cost_value'     => (float) $totalCostValue,
+                'gross_margin'         => (float) $grossMargin,
+                'last_selling_price'   => $lastDistribution?->selling_price,
+                'last_unit_cost'       => $lastDistribution?->unit_cost,
             ];
         }
 
         return $result;
+    }
+
+    /**
+     * Get period start date for byProduct method
+     */
+    private function getPeriodStart(string $period): Carbon
+    {
+        $now = Carbon::now();
+
+        return match($period) {
+            'today' => $now->copy()->startOfDay(),
+            'week'  => $now->copy()->startOfWeek(),
+            'month' => $now->copy()->startOfMonth(),
+            'all'   => Carbon::createFromTimestamp(0),
+            default => $now->copy()->startOfDay(),
+        };
     }
 
     /**
@@ -192,6 +232,7 @@ class ReportController extends Controller
         $range = $this->getDateRange($request);
 
         $movements = Movement::with('product')
+            ->where('user_id', $request->user()->id)
             ->where('status', 'confirmed')
             ->where('type', 'spoil')
             ->where('recorded_at', '>=', $range['start'])

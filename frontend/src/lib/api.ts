@@ -24,22 +24,60 @@ const api = axios.create({
   // timeout: 15000, // 15 seconds — show error instead of hanging forever
 })
 
-// Request interceptor for idempotency key
+// Request interceptor for idempotency key and auth token
 api.interceptors.request.use((config) => {
+  // Attach idempotency key if present
   if (currentIdempotencyKey && ['post', 'put', 'patch'].includes(config.method || '')) {
     config.headers['X-Idempotency-Key'] = currentIdempotencyKey
   }
+
+  // Attach auth token from localStorage
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('charly_token')
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}` 
+    }
+  }
+
   return config
 })
 
-// Response interceptor for error handling
+// Response interceptor for error handling and 401 redirect
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Handle 401 - redirect to login
+    if (error.response?.status === 401 && typeof window !== 'undefined') {
+      localStorage.removeItem('charly_token')
+      localStorage.removeItem('charly_user')
+      window.location.href = '/login'
+    }
     // Don't throw here, let individual calls handle errors
     return Promise.reject(error)
   }
 )
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+
+export const registerUser = (data: {
+  name: string
+  email?: string
+  username?: string
+  phone?: string
+  password: string
+  password_confirmation: string
+}) => api.post('/auth/register', data).catch(error => { throw ApiErrorHandler.handleError(error) })
+
+export const loginUser = (data: {
+  login: string
+  password: string
+}) => api.post('/auth/login', data).catch(error => { throw ApiErrorHandler.handleError(error) })
+
+export const logoutUser = () =>
+  api.post('/auth/logout').catch(error => { throw ApiErrorHandler.handleError(error) })
+
+export const getMe = () =>
+  api.get('/auth/me').catch(error => { throw ApiErrorHandler.handleError(error) })
 
 // ── Products ──
 export const getProducts = () => api.get('/products').catch(error => {

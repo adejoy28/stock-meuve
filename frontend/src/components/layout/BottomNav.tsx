@@ -17,7 +17,7 @@ export default function BottomNav({ pendingSpoilsCount = 0 }: BottomNavProps) {
   const [moreOpen, setMoreOpen] = useState(false)
 
   // Pages that live inside the More sheet
-  const morePages = ['/shops', '/reports']
+  const morePages = ['/shops', '/reports', '/about', '/profile']
   const moreIsActive = morePages.includes(pathname)
 
   const tabs = [

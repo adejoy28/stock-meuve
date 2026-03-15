@@ -26,7 +26,7 @@ class ShopController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Shop::query();
+        $query = Shop::where('user_id', $request->user()->id);
         
         // Include archived if requested
         if (!$request->boolean('include_archived')) {
@@ -50,6 +50,7 @@ class ShopController extends Controller
             'name' => 'required|string|max:255',
         ]);
 
+        $validated['user_id'] = $request->user()->id;
         $shop = Shop::create($validated);
         return new ShopResource($shop);
     }
@@ -65,6 +66,8 @@ class ShopController extends Controller
      */
     public function update(Request $request, Shop $shop)
     {
+        abort_if($shop->user_id !== $request->user()->id, 403, 'Unauthorized');
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
         ]);
@@ -81,8 +84,10 @@ class ShopController extends Controller
      * @param \App\Models\Shop $shop
      * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy(Shop $shop)
+    public function destroy(Request $request, Shop $shop)
     {
+        abort_if($shop->user_id !== $request->user()->id, 403, 'Unauthorized');
+        
         $shop->update(['archived' => true]);
         return response()->json(null, Response::HTTP_NO_CONTENT);
     }

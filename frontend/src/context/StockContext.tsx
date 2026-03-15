@@ -4,6 +4,7 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { useAuth } from '@/context/AuthContext'
 import { 
   getProducts, 
   getShops, 
@@ -61,6 +62,7 @@ interface StockProviderProps {
 }
 
 export function StockProvider({ children }: StockProviderProps) {
+  const { isAuthenticated } = useAuth()   // ← add this line
   // Data state
   const [products, setProducts] = useState<Product[]>([])
   const [shops, setShops] = useState<Shop[]>([])
@@ -173,15 +175,19 @@ export function StockProvider({ children }: StockProviderProps) {
     setPageTitle(title)
   }
 
-  // Load initial data on mount
+  // Only fetch data when user is authenticated
   useEffect(() => {
-    refreshAllData()
-  }, [])
+    if (isAuthenticated) {
+      refreshAllData()
+    }
+  }, [isAuthenticated])
 
   // Refresh report summary when period changes
   useEffect(() => {
-    refreshReportSummary()
-  }, [period])
+    if (isAuthenticated) {
+      refreshReportSummary()
+    }
+  }, [period, isAuthenticated])
 
   return (
     <StockContext.Provider

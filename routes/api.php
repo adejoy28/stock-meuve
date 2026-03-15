@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CorrectionController;
 use App\Http\Controllers\Api\DistributionController;
 use App\Http\Controllers\Api\MovementController;
@@ -11,41 +12,47 @@ use App\Http\Controllers\Api\ShopController;
 use App\Http\Controllers\Api\SpoilController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
-*/
-
-// Products
-Route::apiResource('products', ProductController::class);
-
-// Shops
-Route::apiResource('shops', ShopController::class);
-
-// Movements (listing only)
-Route::get('movements', [MovementController::class, 'index']);
-
-// Wrap all movement store routes with idempotency middleware
-Route::middleware(['idempotency'])->group(function () {
-    Route::post('movements/opening',       [OpeningStockController::class, 'store']);
-    Route::post('movements/receipt',       [ReceiptController::class, 'store']);
-    Route::post('movements/distribution',  [DistributionController::class, 'store']);
-    Route::post('movements/spoil',         [SpoilController::class, 'store']);
-    Route::post('movements/correction',    [CorrectionController::class, 'store']);
+// ── Auth routes (public) ──────────────────────────────────────────────────────
+Route::prefix('auth')->group(function () {
+    // Rate limit login to 10 attempts per minute per IP
+    Route::middleware('throttle:10,1')->group(function () {
+        Route::post('login',    [AuthController::class, 'login']);
+    });
+    // Rate limit registration to 5 per minute per IP
+    Route::middleware('throttle:5,1')->group(function () {
+        Route::post('register', [AuthController::class, 'register']);
+    });
 });
 
-// Spoil Management (confirm/reject don't need idempotency)
-Route::put('movements/spoil/{movement}/confirm', [SpoilController::class, 'confirm']);
-Route::put('movements/spoil/{movement}/reject', [SpoilController::class, 'reject']);
+// ── Protected routes (require valid Sanctum token) ────────────────────────────
+Route::middleware('auth:sanctum')->group(function () {
 
-// Reports
-Route::get('reports/summary', [ReportController::class, 'summary']);
-Route::get('reports/by-shop', [ReportController::class, 'byShop']);
-Route::get('reports/by-product', [ReportController::class, 'byProduct']);
-Route::get('reports/spoils', [ReportController::class, 'spoils']);
+    // Auth
+    Route::post('auth/logout', [AuthController::class, 'logout']);
+    Route::get('auth/me',      [AuthController::class, 'me']);
+    Route::put('auth/profile', [AuthController::class, 'updateProfile']);
+
+    // Products
+    Route::apiResource('products', ProductController::class);
+
+    // Shops
+    Route::apiResource('shops', ShopController::class);
+
+    // Movements
+    Route::get('movements', [MovementController::class, 'index']);
+    Route::middleware('idempotency')->group(function () {
+        Route::post('movements/opening',      [OpeningStockController::class, 'store']);
+        Route::post('movements/receipt',      [ReceiptController::class, 'store']);
+        Route::post('movements/distribution', [DistributionController::class, 'store']);
+        Route::post('movements/correction',   [CorrectionController::class, 'store']);
+        Route::post('movements/spoil',        [SpoilController::class, 'store']);
+    });
+    Route::put('movements/spoil/{id}/confirm', [SpoilController::class, 'confirm']);
+    Route::put('movements/spoil/{id}/reject',  [SpoilController::class, 'reject']);
+
+    // Reports
+    Route::get('reports/summary',    [ReportController::class, 'summary']);
+    Route::get('reports/by-shop',    [ReportController::class, 'byShop']);
+    Route::get('reports/by-product', [ReportController::class, 'byProduct']);
+    Route::get('reports/spoils',     [ReportController::class, 'spoils']);
+});

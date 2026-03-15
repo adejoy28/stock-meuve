@@ -34,6 +34,7 @@ class CorrectionController extends Controller
         ]);
 
         $movement = Movement::create([
+            'user_id' => $request->user()->id,
             'product_id' => $validated['product_id'],
             'type' => 'correction',
             'qty' => $validated['qty'],

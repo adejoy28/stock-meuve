@@ -2,20 +2,93 @@
 ### This file contains tests for all API endpoints in the StockFlow application
 
 @baseUrl = http://localhost:8000/api
+@authToken = Bearer 8|qeWRz81uzrDyr4BvBlvRpOqchVMEYwRTzpkECTr883734364
 
 ### Variables
 @productId = 40
 @shopId = 1
 @movementId = 1
 
+### ===== AUTHENTICATION ENDPOINTS =====
+
+### Register new user (first user gets all existing data)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "John Adebayo",
+  "username": "adejoy",
+  "password": "adejoy123",
+  "password_confirmation": "adejoy123"
+}
+
+### Register with email
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Jane Smith",
+  "email": "jane@example.com",
+  "password": "password123",
+  "password_confirmation": "password123"
+}
+
+### Register with phone
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Bob Wilson",
+  "phone": "+2348012345678",
+  "password": "mypass123",
+  "password_confirmation": "mypass123"
+}
+
+### Login with username
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "johndoe",
+  "password": "secret123"
+}
+
+### Login with email
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "jane@example.com",
+  "password": "password123"
+}
+
+### Login with phone
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "+2348012345678",
+  "password": "mypass123"
+}
+
+### Get current user info
+GET {{baseUrl}}/auth/me
+Authorization: {{authToken}}
+
+### Logout
+POST {{baseUrl}}/auth/logout
+Authorization: {{authToken}}
+
 ### ===== PRODUCTS ENDPOINTS =====
 
 ### Get all Products
 GET {{baseUrl}}/products
+Authorization: {{authToken}}
 
 ### Create new Product
 POST {{baseUrl}}/products
 Content-Type: application/json
+Authorization: {{authToken}}
 
 {
   "name": "Malt 35cl",
@@ -26,6 +99,7 @@ Content-Type: application/json
 ### Create second Product
 POST {{baseUrl}}/products
 Content-Type: application/json
+Authorization: {{authToken}}
 
 {
   "name": "Malt 50cl",
@@ -36,6 +110,7 @@ Content-Type: application/json
 ### Create third Product
 POST {{baseUrl}}/products
 Content-Type: application/json
+Authorization: {{authToken}}
 
 {
   "name": "Energy Drink 25cl",
@@ -46,10 +121,12 @@ Content-Type: application/json
 ### Get specific Product (replace with actual ID)
 GET {{baseUrl}}/products/{{productId}}
 Content-Type: application/json
+Authorization: {{authToken}}
 
 ### Update Product
 PUT {{baseUrl}}/products/{{productId}}
 Content-Type: application/json
+Authorization: {{authToken}}
 
 {
   "name": "Malt 33cl Updated",
@@ -59,15 +136,18 @@ Content-Type: application/json
 
 ### Try to delete Product with movements (should fail)
 DELETE {{baseUrl}}/products/{{productId}}
+Authorization: {{authToken}}
 
 ### ===== SHOPS ENDPOINTS =====
 
 ### Get all shops
 GET {{baseUrl}}/shops
+Authorization: {{authToken}}
 
 ### Create new shop
 POST {{baseUrl}}/shops
 Content-Type: application/json
+Authorization: {{authToken}}
 
 {
   "name": "Shop A"
@@ -76,6 +156,7 @@ Content-Type: application/json
 ### Create second shop
 POST {{baseUrl}}/shops
 Content-Type: application/json
+Authorization: {{authToken}}
 
 {
   "name": "Shop B"
@@ -83,10 +164,12 @@ Content-Type: application/json
 
 ### Get specific shop
 GET {{baseUrl}}/shops/{{shopId}}
+Authorization: {{authToken}}
 
 ### Update shop name
 PUT {{baseUrl}}/shops/{{shopId}}
 Content-Type: application/json
+Authorization: {{authToken}}
 
 {
   "name": "Shop A Updated"
@@ -94,18 +177,22 @@ Content-Type: application/json
 
 ### Archive shop (soft delete)
 DELETE {{baseUrl}}/shops/{{shopId}}
+Authorization: {{authToken}}
 
 ### Get shops again (should not show archived)
 GET {{baseUrl}}/shops
+Authorization: {{authToken}}
 
 ### ===== MOVEMENTS ENDPOINTS =====
 
 ### Get all movements
 GET {{baseUrl}}/movements
+Authorization: {{authToken}}
 
 ### Record opening stock for all Products
 POST {{baseUrl}}/movements/opening
 Content-Type: application/json
+Authorization: {{authToken}}
 
 {
   "products": [
@@ -118,6 +205,7 @@ Content-Type: application/json
 ### Try to record opening stock again for same Product (should fail)
 POST {{baseUrl}}/movements/opening
 Content-Type: application/json
+Authorization: {{authToken}}
 
 {
   "products": [
@@ -128,6 +216,7 @@ Content-Type: application/json
 ### Record goods receipt
 POST {{baseUrl}}/movements/receipt
 Content-Type: application/json
+Authorization: {{authToken}}
 
 {
   "products": [
@@ -140,6 +229,7 @@ Content-Type: application/json
 ### Try to record receipt again same day (should fail)
 POST {{baseUrl}}/movements/receipt
 Content-Type: application/json
+Authorization: {{authToken}}
 
 {
   "products": [
@@ -150,12 +240,13 @@ Content-Type: application/json
 ### Distribute to Shop A
 POST {{baseUrl}}/movements/distribution
 Content-Type: application/json
+Authorization: {{authToken}}
 
 {
   "shop_id": 1,
   "products": [
-    {"product_id": 1, "qty": 15},
-    {"product_id": 2, "qty": 10}
+    {"product_id": 1, "qty": 15, "selling_price": 6000},
+    {"product_id": 2, "qty": 10, "selling_price": 6500}
   ],
   "note": "Afternoon delivery"
 }
@@ -163,6 +254,7 @@ Content-Type: application/json
 ### Try to distribute more than available balance (should fail)
 POST {{baseUrl}}/movements/distribution
 Content-Type: application/json
+Authorization: {{authToken}}
 
 {
   "shop_id": 1,
@@ -174,6 +266,7 @@ Content-Type: application/json
 ### Record correction entry
 POST {{baseUrl}}/movements/correction
 Content-Type: application/json
+Authorization: {{authToken}}
 
 {
   "product_id": 1,
@@ -185,6 +278,7 @@ Content-Type: application/json
 ### Record spoil (pending)
 POST {{baseUrl}}/movements/spoil
 Content-Type: application/json
+Authorization: {{authToken}}
 
 {
   "product_id": 1,
@@ -196,6 +290,7 @@ Content-Type: application/json
 ### Record another spoil (expired)
 POST {{baseUrl}}/movements/spoil
 Content-Type: application/json
+Authorization: {{authToken}}
 
 {
   "product_id": 2,
@@ -207,6 +302,7 @@ Content-Type: application/json
 ### Record third spoil (returned)
 POST {{baseUrl}}/movements/spoil
 Content-Type: application/json
+Authorization: {{authToken}}
 
 {
   "product_id": 3,
@@ -217,76 +313,98 @@ Content-Type: application/json
 
 ### Get pending spoils
 GET {{baseUrl}}/movements?status=pending
+Authorization: {{authToken}}
 
 ### Confirm a spoil
 PUT {{baseUrl}}/movements/spoil/1/confirm
+Authorization: {{authToken}}
 
 ### Reject a spoil
 PUT {{baseUrl}}/movements/spoil/2/reject
+Authorization: {{authToken}}
 
 ### Get all movements after confirm/reject
 GET {{baseUrl}}/movements
+Authorization: {{authToken}}
 
 ### Filter movements by type
 GET {{baseUrl}}/movements?type=distribution
+Authorization: {{authToken}}
 
 ### Filter movements by Product
 GET {{baseUrl}}/movements?product_id=1
+Authorization: {{authToken}}
 
 ### Filter movements by shop
 GET {{baseUrl}}/movements?shop_id=1
+Authorization: {{authToken}}
 
 ### Filter movements by date range
 GET {{baseUrl}}/movements?from=2026-03-04&to=2026-03-04
+Authorization: {{authToken}}
 
 ### ===== REPORTS ENDPOINTS =====
 
 ### Summary report - today
 GET {{baseUrl}}/reports/summary?period=today
+Authorization: {{authToken}}
 
 ### Summary report - this week
 GET {{baseUrl}}/reports/summary?period=week
+Authorization: {{authToken}}
 
 ### Summary report - this month
 GET {{baseUrl}}/reports/summary?period=month
+Authorization: {{authToken}}
 
 ### Summary report - all time
 GET {{baseUrl}}/reports/summary?period=all
+Authorization: {{authToken}}
 
 ### By-shop report - today
 GET {{baseUrl}}/reports/by-shop?period=today
+Authorization: {{authToken}}
 
 ### By-shop report - all time
 GET {{baseUrl}}/reports/by-shop?period=all
+Authorization: {{authToken}}
 
 ### By-product report - today
 GET {{baseUrl}}/reports/by-product?period=today
+Authorization: {{authToken}}
 
 ### By-product report - all time
 GET {{baseUrl}}/reports/by-product?period=all
+Authorization: {{authToken}}
 
 ### Spoils report - today
 GET {{baseUrl}}/reports/spoils?period=today
+Authorization: {{authToken}}
 
 ### Spoils report - all time
 GET {{baseUrl}}/reports/spoils?period=all
+Authorization: {{authToken}}
 
 ### ===== VERIFICATION ENDPOINTS =====
 
 ### Check final Product balances
 GET {{baseUrl}}/products
+Authorization: {{authToken}}
 
 ### Check shop totals
 GET {{baseUrl}}/shops
+Authorization: {{authToken}}
 
 ### Get all movements for final verification
 GET {{baseUrl}}/movements
+Authorization: {{authToken}}
 
 ### ===== ERROR HANDLING TESTS =====
 
 ### Test validation error - missing required fields
 POST {{baseUrl}}/products
 Content-Type: application/json
+Authorization: {{authToken}}
 
 {
   "sku_code": "INVALID"
@@ -295,6 +413,7 @@ Content-Type: application/json
 ### Test validation error - duplicate SKU code
 POST {{baseUrl}}/products
 Content-Type: application/json
+Authorization: {{authToken}}
 
 {
   "name": "Duplicate SKU",
@@ -303,17 +422,37 @@ Content-Type: application/json
 
 ### Test 404 error - non-existent Product
 GET {{baseUrl}}/products/999
+Authorization: {{authToken}}
 
 ### Test 404 error - non-existent movement
 PUT {{baseUrl}}/movements/spoil/999/confirm
+Authorization: {{authToken}}
+
+### Test unauthorized access (no token)
+GET {{baseUrl}}/products
+
+### Test unauthorized access (invalid token)
+GET {{baseUrl}}/products
+Authorization: Bearer invalid_token
 
 ### ===== CLEANUP ENDPOINTS =====
 
 ### (Optional) Delete test data - uncomment to use
 ### DELETE {{baseUrl}}/products/3
+### Authorization: {{authToken}}
 ### DELETE {{baseUrl}}/shops/2
+### Authorization: {{authToken}}
 
 ### ===== PROFESSIONAL ERROR HANDLING EXAMPLES =====
+
+### 401 Unauthorized Error Response Example
+# HTTP/1.1 401 Unauthorized
+# Content-Type: application/json
+# {
+#   "status": "error",
+#   "message": "Unauthenticated.",
+#   "data": []
+# }
 
 ### 422 Validation Error Response Example
 # HTTP/1.1 422 Unprocessable Entity
