@@ -10,7 +10,7 @@ class Movement extends Model
     protected $fillable = [
         'user_id', 'product_id', 'type', 'qty', 'shop_id',
         'reason', 'status', 'note', 'recorded_at',
-        'unit_cost', 'selling_price',
+        'unit_cost', 'selling_price', 'recorded_by',
     ];
 
     protected $casts = [

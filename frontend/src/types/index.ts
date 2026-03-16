@@ -25,6 +25,7 @@ export interface Movement {
   reason?: string
   note?: string
   recorded_at: string
+  recorded_by: string | null
   unit_cost: number | null       // ← null for pre-pricing records
   selling_price: number | null   // ← null for pre-pricing records
   product: {

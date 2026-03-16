@@ -55,6 +55,7 @@ class OpeningStockController extends Controller
                 'qty'         => $productData['qty'],
                 'status'      => 'confirmed',
                 'recorded_at' => now(),
+                'recorded_by'  => $request->user()->name,
             ]);
         }
 

@@ -54,6 +54,7 @@ class CorrectionController extends Controller
             'status'      => 'confirmed',
             'note'        => $validated['note'],
             'recorded_at' => now(),
+            'recorded_by' => $request->user()->name,
         ]);
 
         return response()->json([

@@ -16,6 +16,10 @@ export default function ProfilePage() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmNewPassword, setConfirmNewPassword] = useState('')
   const [showPasswords, setShowPasswords] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deletePassword, setDeletePassword] = useState('')
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -80,6 +84,42 @@ export default function ProfilePage() {
       setError('Could not connect to server. Please try again.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!deletePassword) {
+      setDeleteError('Enter your password to confirm deletion')
+      return
+    }
+    setDeleteLoading(true)
+    setDeleteError('')
+    try {
+      const token = localStorage.getItem('charly_token')
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/account`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ password: deletePassword }),
+        }
+      )
+      const data = await response.json()
+      if (!response.ok) {
+        setDeleteError(data.message || 'Deletion failed')
+        return
+      }
+      // Clear session and redirect
+      localStorage.removeItem('charly_token')
+      localStorage.removeItem('charly_user')
+      router.replace('/login')
+    } catch {
+      setDeleteError('Could not connect to server.')
+    } finally {
+      setDeleteLoading(false)
     }
   }
 
@@ -211,6 +251,57 @@ export default function ProfilePage() {
         Sign Out
       </button>
 
+      {/* Danger zone */}
+      <div className="pt-4 border-t border-gray-100">
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">
+          Danger Zone
+        </p>
+
+        {!showDeleteConfirm ? (
+          <button
+            type="button"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="w-full h-12 border border-red-200 text-red-400 text-sm font-medium rounded-xl active:opacity-70"
+          >
+            Delete Account
+          </button>
+        ) : (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 space-y-3">
+            <p className="text-sm font-semibold text-red-600">This cannot be undone</p>
+            <p className="text-xs text-red-500">
+              All your products, shops, movements, and reports will be permanently deleted.
+              Enter your password to confirm.
+            </p>
+            {deleteError && (
+              <p className="text-xs text-red-500 font-medium">{deleteError}</p>
+            )}
+            <input
+              type="password"
+              value={deletePassword}
+              onChange={e => setDeletePassword(e.target.value)}
+              className="w-full h-10 px-3 border border-red-300 rounded-lg text-sm focus:outline-none focus:border-red-500 bg-white"
+              placeholder="Enter your password..."
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => { setShowDeleteConfirm(false); setDeletePassword(''); setDeleteError('') }}
+                className="flex-1 h-10 border border-gray-200 text-gray-600 text-sm rounded-lg active:opacity-70"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={deleteLoading}
+                className="flex-1 h-10 bg-red-500 text-white text-sm font-semibold rounded-lg active:opacity-70 disabled:opacity-40"
+              >
+                {deleteLoading ? 'Deleting...' : 'Delete Forever'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

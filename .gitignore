@@ -33,3 +33,4 @@ backup/data.sqlite
 backup/result.zip
 backup/stockmeuve_backup_sqlite.sql
 backup/stockmeuve_backup.sql
+frontend/scripts/generate-icons.mjs

@@ -109,7 +109,7 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->forceDelete();
+        $request->user()->currentAccessToken()->delete();
 
         return response()->json([
             'status'  => 'success',
@@ -166,6 +166,43 @@ class AuthController extends Controller
             'status'  => 'success',
             'message' => 'Profile updated successfully.',
             'data'    => $this->userResponse($user),
+        ]);
+    }
+
+    /**
+     * Delete account — permanently removes user and all their data
+     */
+    public function deleteAccount(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        $user = $request->user();
+
+        // Verify password before deleting
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Incorrect password. Account not deleted.',
+            ], 422);
+        }
+
+        // Revoke all tokens first
+        $user->tokens()->delete();
+
+        // Delete all user data — cascade handles movements via product/shop FK
+        // But movements have their own user_id so delete directly
+        \DB::table('movements')->where('user_id', $user->id)->delete();
+        \DB::table('products')->where('user_id', $user->id)->delete();
+        \DB::table('shops')->where('user_id', $user->id)->delete();
+
+        // Delete the user
+        $user->delete();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Your account and all data have been permanently deleted.',
         ]);
     }
 

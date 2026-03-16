@@ -91,6 +91,27 @@ export default function MovementsPage() {
     }))
   }
 
+  const handleExport = () => {
+    const token = localStorage.getItem('charly_token')
+    const params = new URLSearchParams()
+    if (filters.type && filters.type !== 'all') params.append('type', filters.type)
+    if (filters.from) params.append('from', filters.from)
+    if (filters.to)   params.append('to',   filters.to)
+
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/export/movements?${params.toString()}` 
+
+    // Fetch with auth header then trigger download
+    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => res.blob())
+      .then(blob => {
+        const a = document.createElement('a')
+        a.href = URL.createObjectURL(blob)
+        a.download = `movements-${new Date().toISOString().split('T')[0]}.csv` 
+        a.click()
+        URL.revokeObjectURL(a.href)
+      })
+  }
+
   // Count active filters for the badge
   const activeFilterCount = [
     filters.type !== 'all' ? 1 : 0,
@@ -134,6 +155,16 @@ export default function MovementsPage() {
               Clear
             </button>
           )}
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 bg-white active:opacity-70"
+            title="Export to CSV"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003 3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Export
+          </button>
           <button
             onClick={() => setFiltersOpen(!filtersOpen)}
             className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border active:opacity-70 ${
@@ -274,6 +305,9 @@ export default function MovementsPage() {
                     Time
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Recorded by
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Product
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -305,6 +339,9 @@ export default function MovementsPage() {
                       <div className="text-sm text-gray-900">
                         {formatTime(movement.recorded_at)}
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-xs text-gray-500">{movement.recorded_by || '—'}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
@@ -404,6 +441,11 @@ export default function MovementsPage() {
                   </span>
                   <span className="text-xs text-gray-400">{movement.shop?.name || ''}</span>
                 </div>
+                {movement.recorded_by && (
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    by {movement.recorded_by}
+                  </p>
+                )}
                 {movement.note && (
                   <p className="text-xs text-gray-400 mt-1 italic">{movement.note}</p>
                 )}

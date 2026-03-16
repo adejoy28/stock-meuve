@@ -75,6 +75,7 @@ class DistributionController extends Controller
                     'unit_cost'     => $unitCost,
                     'selling_price' => $sellingPrice,
                     'recorded_at'   => now(),
+                    'recorded_by'   => $request->user()->name,
                 ]);
             }
         });

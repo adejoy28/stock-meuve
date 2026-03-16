@@ -25,6 +25,7 @@ Route::middleware(['auth:sanctum', 'throttle:120,1'])->group(function () {
     Route::post('auth/logout',      [AuthController::class, 'logout']);
     Route::get('auth/me',           [AuthController::class, 'me']);
     Route::put('auth/profile',      [AuthController::class, 'updateProfile']);
+    Route::delete('auth/account',   [AuthController::class, 'deleteAccount']);
 
     // Products
     Route::apiResource('products', ProductController::class);
@@ -52,4 +53,8 @@ Route::middleware(['auth:sanctum', 'throttle:120,1'])->group(function () {
     Route::get('reports/by-shop',    [ReportController::class, 'byShop']);
     Route::get('reports/by-product', [ReportController::class, 'byProduct']);
     Route::get('reports/spoils',     [ReportController::class, 'spoils']);
+
+    // Export
+    Route::get('export/movements', [\App\Http\Controllers\Api\ExportController::class, 'movements']);
+    Route::get('export/products',  [\App\Http\Controllers\Api\ExportController::class, 'products']);
 });

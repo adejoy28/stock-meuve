@@ -29,6 +29,7 @@ class MovementResource extends JsonResource
             'reason'        => $this->reason,
             'note'          => $this->note,
             'recorded_at'   => $this->recorded_at->toISOString(),
+            'recorded_by'   => $this->recorded_by,
             'unit_cost'     => $this->unit_cost,      // ← null for old records, float for new
             'selling_price' => $this->selling_price,  // ← null for old records, float for new
             'product' => $this->product ? [

@@ -11,7 +11,7 @@ class MovementController extends Controller
 {
     public function index(Request $request)
     {
-        $limit = min((int) $request->get('limit', 50), 200); // max 200 per page
+        $limit = min((int) $request->get('limit', 20), 50); // max 50 per page
 
         $query = Movement::with(['product', 'shop'])
             ->where('movements.user_id', $request->user()->id); // scope to user

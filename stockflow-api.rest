@@ -5,7 +5,7 @@
 @authToken = Bearer 8|qeWRz81uzrDyr4BvBlvRpOqchVMEYwRTzpkECTr883734364
 
 ### Variables
-@productId = 40
+@productId = 25
 @shopId = 1
 @movementId = 1
 

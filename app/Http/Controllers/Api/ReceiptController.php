@@ -39,6 +39,7 @@ class ReceiptController extends Controller
                 'status'      => 'confirmed',
                 'note'        => $request->note ?? null,
                 'recorded_at' => now(),
+                'recorded_by'  => $request->user()->name,
             ]);
         }
 
