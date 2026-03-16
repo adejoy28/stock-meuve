@@ -128,11 +128,10 @@ export default function ProfilePage() {
     router.replace('/login')
   }
 
-  const inputClass = "w-full h-12 px-4 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500"
+  const inputClass = "w-full h-12 px-4 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:border-orange-500"
 
   return (
-    <div className="space-y-5 pb-24">
-
+    <div className="space-y-4 dark:bg-gray-900">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-14 h-14 bg-orange-500 rounded-2xl flex items-center justify-center shrink-0">
@@ -141,44 +140,44 @@ export default function ProfilePage() {
           </span>
         </div>
         <div>
-          <p className="text-base font-bold text-gray-900">{user?.name}</p>
-          <p className="text-xs text-gray-400">
+          <p className="text-base font-bold text-gray-900 dark:text-gray-100">{user?.name}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">
             {user?.email || user?.username || user?.phone}
           </p>
         </div>
       </div>
 
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-500">
+        <div className="p-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-xl text-sm text-red-500 dark:text-red-300">
           {error}
         </div>
       )}
       {success && (
-        <div className="p-3 bg-green-50 border border-green-200 rounded-xl text-sm text-green-600">
+        <div className="p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-xl text-sm text-green-600 dark:text-green-300">
           {success}
         </div>
       )}
 
       {/* Personal info */}
       <div>
-        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">
+        <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">
           Personal Info
         </p>
         <div className="space-y-3">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Full Name</label>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Full Name</label>
             <input type="text" value={name} onChange={e => setName(e.target.value)} className={inputClass} />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Email</label>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Email</label>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} className={inputClass} placeholder="Optional" autoCapitalize="none" />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Username</label>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Username</label>
             <input type="text" value={username} onChange={e => setUsername(e.target.value)} className={inputClass} placeholder="Optional" autoCapitalize="none" />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Phone</label>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Phone</label>
             <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className={inputClass} placeholder="Optional" />
           </div>
         </div>
@@ -186,12 +185,12 @@ export default function ProfilePage() {
 
       {/* Change password */}
       <div>
-        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">
+        <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">
           Change Password <span className="font-normal normal-case">(leave blank to keep current)</span>
         </p>
         <div className="space-y-3">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Current Password</label>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Current Password</label>
             <input
               type={showPasswords ? 'text' : 'password'}
               value={currentPassword}
@@ -201,7 +200,7 @@ export default function ProfilePage() {
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">New Password</label>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">New Password</label>
             <input
               type={showPasswords ? 'text' : 'password'}
               value={newPassword}
@@ -211,7 +210,7 @@ export default function ProfilePage() {
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Confirm New Password</label>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Confirm New Password</label>
             <input
               type={showPasswords ? 'text' : 'password'}
               value={confirmNewPassword}
@@ -227,7 +226,7 @@ export default function ProfilePage() {
               onChange={e => setShowPasswords(e.target.checked)}
               className="rounded"
             />
-            <span className="text-xs text-gray-500">Show passwords</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">Show passwords</span>
           </label>
         </div>
       </div>
