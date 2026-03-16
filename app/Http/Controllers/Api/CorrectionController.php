@@ -28,26 +28,38 @@ class CorrectionController extends Controller
     {
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
-            'qty' => 'required|integer|not_in:0', // Cannot be zero
-            'shop_id' => 'nullable|exists:shops,id',
-            'note' => 'required|string|max:500',
+            'qty'        => 'required|integer|not_in:0|min:-10000|max:10000',
+            'shop_id'    => 'nullable|exists:shops,id',
+            'note'       => 'required|string|min:5|max:500',
         ]);
 
+        // Ensure product belongs to this user
+        $product = \App\Models\Product::where('id', $validated['product_id'])
+            ->where('user_id', $request->user()->id)
+            ->first();
+
+        if (!$product) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Product not found.',
+            ], 404);
+        }
+
         $movement = Movement::create([
-            'user_id' => $request->user()->id,
-            'product_id' => $validated['product_id'],
-            'type' => 'correction',
-            'qty' => $validated['qty'],
-            'shop_id' => $validated['shop_id'] ?? null,
-            'status' => 'confirmed',
-            'note' => $validated['note'],
-            'recorded_at' => now(),  // ← add this
+            'user_id'     => $request->user()->id,
+            'product_id'  => $validated['product_id'],
+            'type'        => 'correction',
+            'qty'         => $validated['qty'],
+            'shop_id'     => $validated['shop_id'] ?? null,
+            'status'      => 'confirmed',
+            'note'        => $validated['note'],
+            'recorded_at' => now(),
         ]);
 
         return response()->json([
-            'status' => 'success',
+            'status'  => 'success',
             'message' => 'Correction recorded successfully.',
-            'data' => new MovementResource($movement),
+            'data'    => new MovementResource($movement),
         ], 201);
     }
 }

@@ -63,7 +63,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
         {/* Main content area */}
         <div className={
           !isPublicRoute 
-            ? `${isSideNavCollapsed ? 'lg:ml-16' : 'lg:ml-56'} min-h-screen flex flex-col transition-all duration-300` 
+            ? `md:ml-16 min-h-screen flex flex-col transition-all duration-300 ${isSideNavCollapsed ? 'lg:ml-16' : 'lg:ml-56'}` 
             : 'min-h-screen flex flex-col'
         }>
 

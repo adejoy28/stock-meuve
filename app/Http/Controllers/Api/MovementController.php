@@ -1,12 +1,5 @@
 <?php
 
-/**
- * Movement Controller
- * 
- * Handles listing and basic movement operations.
- * Provides endpoints for viewing and filtering movements.
- */
-
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -16,45 +9,48 @@ use Illuminate\Http\Request;
 
 class MovementController extends Controller
 {
-    /**
-     * List movements
-     *
-     * Returns a list of movements with optional filtering by type, product, shop, status, and date range.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function index(Request $request)
     {
+        $limit = min((int) $request->get('limit', 50), 200); // max 200 per page
+
         $query = Movement::with(['product', 'shop'])
             ->where('movements.user_id', $request->user()->id); // scope to user
 
-        // Apply filters
-        if ($request->has('type')) {
+        // Filters
+        if ($request->filled('type')) {
             $query->where('type', $request->type);
         }
-        if ($request->has('product_id')) {
+        if ($request->filled('product_id')) {
             $query->where('product_id', $request->product_id);
         }
-        if ($request->has('shop_id')) {
+        if ($request->filled('shop_id')) {
             $query->where('shop_id', $request->shop_id);
         }
-        if ($request->has('status')) {
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
-        if ($request->has('from')) {
+        if ($request->filled('from')) {
             $query->whereDate('recorded_at', '>=', $request->from);
         }
-        if ($request->has('to')) {
+        if ($request->filled('to')) {
             $query->whereDate('recorded_at', '<=', $request->to);
         }
 
-        $movements = $query->orderBy('recorded_at', 'desc')->get();
-        
+        $movements = $query
+            ->orderBy('recorded_at', 'desc')
+            ->paginate($limit);
+
         return response()->json([
-            'status' => 'success',
+            'status'  => 'success',
             'message' => 'Movements retrieved successfully.',
-            'data' => MovementResource::collection($movements),
+            'data'    => MovementResource::collection($movements->items()),
+            'meta'    => [
+                'current_page' => $movements->currentPage(),
+                'last_page'    => $movements->lastPage(),
+                'per_page'     => $movements->perPage(),
+                'total'        => $movements->total(),
+                'has_more'     => $movements->hasMorePages(),
+            ],
         ]);
     }
 }

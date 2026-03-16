@@ -13,82 +13,43 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ShopResource;
 use App\Models\Shop;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
 class ShopController extends Controller
 {
-    /**
-     * List all shops
-     *
-     * Returns a list of all non-archived shops with their total distributed amounts.
-     *
-     * @return \App\Http\Resources\ShopResource
-     */
+    // index() — filter by user
     public function index(Request $request)
     {
-        $query = Shop::where('user_id', $request->user()->id);
-        
-        // Include archived if requested
-        if (!$request->boolean('include_archived')) {
-            $query->where('archived', false);
-        }
-        
-        return ShopResource::collection($query->get());
+        $shops = Shop::where('user_id', $request->user()->id)
+            ->where('archived', false)
+            ->get();
+        return ShopResource::collection($shops);
     }
 
-    /**
-     * Create shop
-     *
-     * Creates a new shop with the provided name.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \App\Http\Resources\ShopResource
-     */
+    // store() — attach user_id
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
+        $validated = $request->validate(['name' => 'required|string|max:255']);
+        $shop = Shop::create([
+            'user_id' => $request->user()->id,
+            'name'    => $validated['name'],
         ]);
-
-        $validated['user_id'] = $request->user()->id;
-        $shop = Shop::create($validated);
         return new ShopResource($shop);
     }
 
-    /**
-     * Update shop
-     *
-     * Updates the specified shop's name.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Models\Shop $shop
-     * @return \App\Http\Resources\ShopResource
-     */
+    // update() — verify ownership
     public function update(Request $request, Shop $shop)
     {
-        abort_if($shop->user_id !== $request->user()->id, 403, 'Unauthorized');
-        
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
-
+        abort_if($shop->user_id !== $request->user()->id, 403);
+        $validated = $request->validate(['name' => 'required|string|max:255']);
         $shop->update($validated);
         return new ShopResource($shop);
     }
 
-    /**
-     * Archive shop
-     *
-     * Archives the specified shop (soft delete). Archived shops won't appear in the main list.
-     *
-     * @param \App\Models\Shop $shop
-     * @return \Illuminate\Http\JsonResponse
-     */
+    // destroy() — verify ownership
     public function destroy(Request $request, Shop $shop)
     {
-        abort_if($shop->user_id !== $request->user()->id, 403, 'Unauthorized');
-        
+        abort_if($shop->user_id !== $request->user()->id, 403);
         $shop->update(['archived' => true]);
-        return response()->json(null, Response::HTTP_NO_CONTENT);
+        return response()->json(null, 204);
     }
 }

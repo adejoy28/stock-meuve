@@ -21,9 +21,9 @@ return [
 
     'allowed_origins' => [
         'https://stock-meuve-web.onrender.com',
+        'http://localhost:3000',
         'capacitor://localhost',
         'http://localhost',
-        'http://localhost:3000',
     ],
 
     'allowed_origins_patterns' => [],

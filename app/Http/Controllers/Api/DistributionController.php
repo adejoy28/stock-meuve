@@ -1,12 +1,5 @@
 <?php
 
-/**
- * Distribution Controller
- * 
- * Handles stock distribution operations to shops.
- * Provides endpoints for transferring inventory to different locations.
- */
-
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -14,76 +7,77 @@ use App\Http\Resources\MovementResource;
 use App\Models\Movement;
 use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 class DistributionController extends Controller
 {
-    /**
-     * Distribute products to shop
-     *
-     * Distributes products to a specific shop. Validates that sufficient balance exists before distribution.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'shop_id'                    => 'required|exists:shops,id',
-            'products'                   => 'required|array|min:1',
-            'products.*.product_id'      => 'required|exists:products,id',
-            'products.*.qty'             => 'required|integer|min:1',
-            'products.*.selling_price'   => 'nullable|numeric|min:0', // ← new, optional
-            'note'                       => 'nullable|string|max:500',
+            'shop_id'                  => 'required|exists:shops,id',
+            'products'                 => 'required|array|min:1',
+            'products.*.product_id'    => 'required|exists:products,id',
+            'products.*.qty'           => 'required|integer|min:1|max:10000', // min:1 not 0
+            'products.*.selling_price' => 'nullable|numeric|min:0',
+            'note'                     => 'nullable|string|max:500',
         ]);
 
-        // Validate shop belongs to this user
+        // Verify shop belongs to this user
         $shop = \App\Models\Shop::where('id', $validated['shop_id'])
             ->where('user_id', $request->user()->id)
-            ->firstOrFail();
+            ->first();
+
+        if (!$shop) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Shop not found.',
+            ], 404);
+        }
 
         $movements = [];
 
-        foreach ($validated['products'] as $productData) {
-            $product = Product::where('id', $productData['product_id'])
-                ->where('user_id', $request->user()->id)
-                ->firstOrFail();
-            $currentBalance = $product->balance();
+        // Wrap in a transaction so partial failures roll back
+        DB::transaction(function () use ($validated, $request, &$movements) {
+            foreach ($validated['products'] as $productData) {
 
-            // Check sufficient stock
-            if ($currentBalance < $productData['qty']) {
-                return response()->json([
-                    'status'  => 'error',
-                    'message' => 'Insufficient stock for distribution',
-                    'data'    => [
-                        'product_id' => $productData['product_id'],
-                        'available'  => $currentBalance,
-                        'requested'  => $productData['qty'],
-                    ],
-                ], Response::HTTP_CONFLICT);
+                // Lock the row to prevent concurrent over-distribution
+                $product = Product::where('id', $productData['product_id'])
+                    ->where('user_id', $request->user()->id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$product) {
+                    abort(404, 'Product not found.');
+                }
+
+                $currentBalance = $product->balance();
+
+                if ($currentBalance < $productData['qty']) {
+                    abort(409,
+                        "Insufficient stock for {$product->name}. " .
+                        "Available: {$currentBalance}, requested: {$productData['qty']}."
+                    );
+                }
+
+                $unitCost     = $product->cost_price ?? null;
+                $sellingPrice = isset($productData['selling_price'])
+                    ? (float) $productData['selling_price']
+                    : $unitCost;
+
+                $movements[] = Movement::create([
+                    'user_id'       => $request->user()->id,
+                    'product_id'    => $productData['product_id'],
+                    'type'          => 'distribution',
+                    'qty'           => -$productData['qty'],
+                    'shop_id'       => $validated['shop_id'],
+                    'status'        => 'confirmed',
+                    'note'          => $validated['note'] ?? null,
+                    'unit_cost'     => $unitCost,
+                    'selling_price' => $sellingPrice,
+                    'recorded_at'   => now(),
+                ]);
             }
-
-            // Snapshot the current cost price — frozen forever on this movement
-            $unitCost = $product->cost_price ?? null;
-
-            // Use provided selling price, or fall back to cost price if not given
-            $sellingPrice = isset($productData['selling_price'])
-                ? (float) $productData['selling_price']
-                : $unitCost;
-
-            $movements[] = Movement::create([
-                'user_id'       => $request->user()->id,  // ← add this
-                'product_id'    => $productData['product_id'],
-                'type'          => 'distribution',
-                'qty'           => -$productData['qty'],   // Negative = outgoing
-                'shop_id'       => $validated['shop_id'],
-                'status'        => 'confirmed',
-                'note'          => $validated['note'] ?? null,
-                'unit_cost'     => $unitCost,              // ← snapshot at time of recording
-                'selling_price' => $sellingPrice,          // ← what shop was charged
-                'recorded_at'   => now()
-            ]);
-        }
+        });
 
         return response()->json([
             'status'  => 'success',

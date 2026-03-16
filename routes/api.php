@@ -12,25 +12,19 @@ use App\Http\Controllers\Api\ShopController;
 use App\Http\Controllers\Api\SpoilController;
 use Illuminate\Support\Facades\Route;
 
-// ── Auth routes (public) ──────────────────────────────────────────────────────
+// ── Public auth routes ────────────────────────────────────────────────────────
 Route::prefix('auth')->group(function () {
-    // Rate limit login to 10 attempts per minute per IP
-    Route::middleware('throttle:10,1')->group(function () {
-        Route::post('login',    [AuthController::class, 'login']);
-    });
-    // Rate limit registration to 5 per minute per IP
-    Route::middleware('throttle:5,1')->group(function () {
-        Route::post('register', [AuthController::class, 'register']);
-    });
+    Route::middleware('throttle:10,1')->post('login',    [AuthController::class, 'login']);
+    Route::middleware('throttle:5,1')->post('register',  [AuthController::class, 'register']);
 });
 
-// ── Protected routes (require valid Sanctum token) ────────────────────────────
-Route::middleware('auth:sanctum')->group(function () {
+// ── Protected routes — require valid Sanctum token ────────────────────────────
+Route::middleware(['auth:sanctum', 'throttle:120,1'])->group(function () {
 
     // Auth
-    Route::post('auth/logout', [AuthController::class, 'logout']);
-    Route::get('auth/me',      [AuthController::class, 'me']);
-    Route::put('auth/profile', [AuthController::class, 'updateProfile']);
+    Route::post('auth/logout',      [AuthController::class, 'logout']);
+    Route::get('auth/me',           [AuthController::class, 'me']);
+    Route::put('auth/profile',      [AuthController::class, 'updateProfile']);
 
     // Products
     Route::apiResource('products', ProductController::class);
@@ -38,15 +32,18 @@ Route::middleware('auth:sanctum')->group(function () {
     // Shops
     Route::apiResource('shops', ShopController::class);
 
-    // Movements
+    // Movements — read
     Route::get('movements', [MovementController::class, 'index']);
+
+    // Movements — write (idempotency middleware)
     Route::middleware('idempotency')->group(function () {
-        Route::post('movements/opening',      [OpeningStockController::class, 'store']);
-        Route::post('movements/receipt',      [ReceiptController::class, 'store']);
-        Route::post('movements/distribution', [DistributionController::class, 'store']);
-        Route::post('movements/correction',   [CorrectionController::class, 'store']);
-        Route::post('movements/spoil',        [SpoilController::class, 'store']);
+        Route::post('movements/opening',       [OpeningStockController::class, 'store']);
+        Route::post('movements/receipt',       [ReceiptController::class, 'store']);
+        Route::post('movements/distribution',  [DistributionController::class, 'store']);
+        Route::post('movements/correction',    [CorrectionController::class, 'store']);
+        Route::post('movements/spoil',         [SpoilController::class, 'store']);
     });
+
     Route::put('movements/spoil/{id}/confirm', [SpoilController::class, 'confirm']);
     Route::put('movements/spoil/{id}/reject',  [SpoilController::class, 'reject']);
 

@@ -88,8 +88,10 @@ class AuthController extends Controller
             ]);
         }
 
-        // Revoke old tokens and issue fresh one
-        $user->tokens()->delete();
+        // Revoke only tokens older than 30 days and issue fresh one
+        $user->tokens()
+            ->where('created_at', '<', now()->subDays(30))
+            ->delete();
         $token = $user->createToken('charly-hb')->plainTextToken;
 
         return response()->json([

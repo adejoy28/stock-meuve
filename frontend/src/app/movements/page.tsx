@@ -24,6 +24,8 @@ export default function MovementsPage() {
   const { products, shops, refreshMovements } = useStock()
   const [movements, setMovements] = useState<Movement[]>([])
   const [loading, setLoading] = useState(true)
+  const [hasMore, setHasMore] = useState(false)
+  const [page, setPage] = useState(1)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [filters, setFilters] = useState<Filters>({
     type: 'all',
@@ -33,12 +35,7 @@ export default function MovementsPage() {
     to: ''
   })
 
-  // Load movements when filters change
-  useEffect(() => {
-    loadMovements()
-  }, [filters])
-
-  const loadMovements = async () => {
+  const fetchMovements = async (pageNum = 1) => {
     setLoading(true)
     try {
       const params: Record<string, string> = {}
@@ -60,9 +57,19 @@ export default function MovementsPage() {
         params.to = filters.to
       }
 
+      params.page = pageNum.toString()
+      params.limit = '50'
+
       const response = await getMovements(params)
-      
-      setMovements(extractArray<Movement>(response.data))
+      const data = response.data
+
+      if (pageNum === 1) {
+        setMovements(extractArray<Movement>(data))
+      } else {
+        setMovements(prev => [...prev, ...extractArray<Movement>(data)])
+      }
+
+      setHasMore(data.meta?.has_more || false)
     } catch (error) {
       console.error('Failed to load movements:', error)
       setMovements([])
@@ -70,6 +77,12 @@ export default function MovementsPage() {
       setLoading(false)
     }
   }
+
+  // Load movements when filters change
+  useEffect(() => {
+    setPage(1)
+    fetchMovements(1)
+  }, [filters])
 
   const handleFilterChange = (key: keyof Filters, value: string) => {
     setFilters(prev => ({
@@ -400,6 +413,20 @@ export default function MovementsPage() {
           </>
         )}
       </div>
+
+      {/* Load more button */}
+      {hasMore && (
+        <button
+          onClick={() => {
+            const next = page + 1
+            setPage(next)
+            fetchMovements(next)
+          }}
+          className="w-full h-11 border border-gray-200 text-sm text-gray-500 rounded-xl active:opacity-70 mt-2"
+        >
+          Load more
+        </button>
+      )}
     </div>
   )
 }

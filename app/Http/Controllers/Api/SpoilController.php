@@ -28,26 +28,38 @@ class SpoilController extends Controller
     {
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
-            'qty' => 'required|integer|min:1',
-            'reason' => 'required|in:damaged,expired,returned',
-            'note' => 'nullable|string|max:500',
+            'qty'        => 'required|integer|min:1|max:10000',
+            'reason'     => 'required|in:damaged,expired,returned',
+            'note'       => 'nullable|string|max:500',
         ]);
 
+        // Ensure product belongs to this user
+        $product = \App\Models\Product::where('id', $validated['product_id'])
+            ->where('user_id', $request->user()->id)
+            ->first();
+
+        if (!$product) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Product not found.',
+            ], 404);
+        }
+
         $movement = Movement::create([
-            'user_id' => $request->user()->id,
-            'product_id' => $validated['product_id'],
-            'type' => 'spoil',
-            'qty' => -$validated['qty'], // Negative for outgoing
-            'reason' => $validated['reason'],
-            'status' => 'pending',
-            'note' => $validated['note'] ?? null,
-            'recorded_at' => now(),  // ← add this
+            'user_id'     => $request->user()->id,
+            'product_id'  => $validated['product_id'],
+            'type'        => 'spoil',
+            'qty'         => -$validated['qty'],
+            'reason'      => $validated['reason'],
+            'status'      => 'pending',
+            'note'        => $validated['note'] ?? null,
+            'recorded_at' => now(),
         ]);
 
         return response()->json([
-            'status' => 'success',
+            'status'  => 'success',
             'message' => 'Spoil recorded successfully.',
-            'data' => new MovementResource($movement),
+            'data'    => new MovementResource($movement),
         ], 201);
     }
 
@@ -59,24 +71,25 @@ class SpoilController extends Controller
      * @param \App\Models\Movement $movement
      * @return \Illuminate\Http\JsonResponse
      */
-    public function confirm(Request $request, Movement $movement)
+    public function confirm(Request $request, $id)
     {
-        abort_if($movement->user_id !== $request->user()->id, 403, 'Unauthorized');
-        
+        $movement = Movement::where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
+
         if ($movement->type !== 'spoil' || $movement->status !== 'pending') {
             return response()->json([
-                'status' => 'error',
-                'message' => 'Only pending spoils can be confirmed',
-                'data' => [],
+                'status'  => 'error',
+                'message' => 'Only pending spoils can be confirmed.',
             ], 400);
         }
 
         $movement->update(['status' => 'confirmed']);
 
         return response()->json([
-            'status' => 'success',
+            'status'  => 'success',
             'message' => 'Spoil confirmed successfully.',
-            'data' => new MovementResource($movement),
+            'data'    => new MovementResource($movement),
         ]);
     }
 
@@ -88,24 +101,25 @@ class SpoilController extends Controller
      * @param \App\Models\Movement $movement
      * @return \Illuminate\Http\JsonResponse
      */
-    public function reject(Request $request, Movement $movement)
+    public function reject(Request $request, $id)
     {
-        abort_if($movement->user_id !== $request->user()->id, 403, 'Unauthorized');
-        
+        $movement = Movement::where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
+
         if ($movement->type !== 'spoil' || $movement->status !== 'pending') {
             return response()->json([
-                'status' => 'error',
-                'message' => 'Only pending spoils can be rejected',
-                'data' => [],
+                'status'  => 'error',
+                'message' => 'Only pending spoils can be rejected.',
             ], 400);
         }
 
         $movement->update(['status' => 'rejected']);
 
         return response()->json([
-            'status' => 'success',
+            'status'  => 'success',
             'message' => 'Spoil rejected successfully.',
-            'data' => new MovementResource($movement),
+            'data'    => new MovementResource($movement),
         ]);
     }
 }
