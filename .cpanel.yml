@@ -2,12 +2,16 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/vjxzcyjr/charlyhb
-    - cd $DEPLOYPATH && /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction
-    - cd $DEPLOYPATH && php artisan down --render="errors::503" --retry=60
-    - cd $DEPLOYPATH && php artisan config:clear
-    - cd $DEPLOYPATH && php artisan config:cache
-    - cd $DEPLOYPATH && php artisan route:cache
-    - cd $DEPLOYPATH && php artisan view:cache
-    - cd $DEPLOYPATH && php artisan migrate --force
-    - cd $DEPLOYPATH && php artisan queue:restart
-    - cd $DEPLOYPATH && php artisan up
+    - cd $DEPLOYPATH
+
+    - php artisan down || true
+
+    - php artisan config:clear
+    - php artisan cache:clear
+
+    - php artisan migrate --force || true
+
+    - php artisan config:cache
+    - php artisan route:cache
+
+    - php artisan up || true
