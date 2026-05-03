@@ -1,29 +1,11 @@
----
 deployment:
   tasks:
-    - echo "DEPLOY WORKING"
-    - export REPOPATH=/home/vjxzcyjr/repositories/stock-meuve
-    - echo "REPOPATH: $REPOPATH"
     - export DEPLOYPATH=/home/vjxzcyjr/charlyhb
-    - echo "DEPLOYPATH: $DEPLOYPATH"
-
-    - /bin/cp -R $REPOPATH/* $DEPLOYPATH
-
     - cd $DEPLOYPATH
-
-    - echo "turning artisanDOWN"
     - php artisan down || true
-
-    - echo "clearing cache"
     - php artisan config:clear
     - php artisan cache:clear
-
-    - echo "migrating"
     - php artisan migrate --force || true
-
-    - echo "caching"
     - php artisan config:cache
     - php artisan route:cache
-
-    - echo "turning artisanUP"
     - php artisan up || true
