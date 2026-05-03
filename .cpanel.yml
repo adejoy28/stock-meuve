@@ -17,7 +17,7 @@ deployment:
     - echo "APP DOWN" >> storage/logs/backend/deploy.log
 
     - echo "COMPOSER INSTALLING..." >> storage/logs/backend/deploy.log
-    - /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction
+    - /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction >> storage/logs/backend/deploy.log 2>&1
 
     - echo "PHP VERSION" >> storage/logs/backend/deploy.log
     - php -v >> storage/logs/backend/deploy.log 2>&1
