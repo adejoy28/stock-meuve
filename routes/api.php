@@ -60,3 +60,5 @@ Route::middleware(['auth:sanctum', 'throttle:120,1'])->group(function () {
 });
 
 Route::get('/health', fn() => response()->json(['status' => 'ok']));
+
+Route::get('/', fn() => response()->json(['message' => 'Nothing to look for here, Hope you are not lost?']));
