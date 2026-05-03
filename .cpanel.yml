@@ -3,38 +3,44 @@ deployment:
     - export DEPLOYPATH=/home/vjxzcyjr/charlyhb
     - cd $DEPLOYPATH
 
-    - echo "DEPLOY START" >> deploy.log
+    - mkdir -p storage/logs/backend
+    - echo "=== DEPLOYMENT STARTED ===" >> storage/logs/backend/deploy.log
+    - echo "Timestamp: $(date)" >> storage/logs/backend/deploy.log
+    - echo "User: $(whoami)" >> storage/logs/backend/deploy.log
+    - echo "Path: $DEPLOYPATH" >> storage/logs/backend/deploy.log
 
     - php artisan down || true
-    - echo "APP DOWN" >> deploy.log
+    - echo "APP DOWN" >> storage/logs/backend/deploy.log
 
-    - echo "COMPOSER INSTALLED" >> deploy.log
+    - echo "COMPOSER INSTALLING..." >> storage/logs/backend/deploy.log
     - /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction
 
-    - echo "PHP VERSION" >> deploy.log
-    - php -v
+    - echo "PHP VERSION" >> storage/logs/backend/deploy.log
+    - php -v >> storage/logs/backend/deploy.log 2>&1
 
-    - echo "KEY GENERATED" >> deploy.log
-    - php artisan key:generate
+    - echo "KEY GENERATED" >> storage/logs/backend/deploy.log
+    - php artisan key:generate >> storage/logs/backend/deploy.log 2>&1
 
-    - echo "CONFIG CLEARED" >> deploy.log
-    - php artisan config:clear >> deploy.log 2>&1
+    - echo "CONFIG CLEARED" >> storage/logs/backend/deploy.log
+    - php artisan config:clear >> storage/logs/backend/deploy.log 2>&1
 
-    - echo "CACHE CLEARED" >> deploy.log
-    - php artisan cache:clear >> deploy.log 2>&1
+    - echo "CACHE CLEARED" >> storage/logs/backend/deploy.log
+    - php artisan cache:clear >> storage/logs/backend/deploy.log 2>&1
 
-    - echo "CONFIG CACHED" >> deploy.log
-    - php artisan config:cache >> deploy.log 2>&1
+    - echo "CONFIG CACHED" >> storage/logs/backend/deploy.log
+    - php artisan config:cache >> storage/logs/backend/deploy.log 2>&1
 
-    - echo "ROUTES CACHED" >> deploy.log
-    - php artisan route:cache >> deploy.log 2>&1
+    - echo "ROUTES CACHED" >> storage/logs/backend/deploy.log
+    - php artisan route:cache >> storage/logs/backend/deploy.log 2>&1
     
-    - php artisan migrate --force
-    - echo "MIGRATED" >> deploy.log
+    - echo "RUNNING MIGRATIONS..." >> storage/logs/backend/deploy.log
+    - php artisan migrate --force >> storage/logs/backend/deploy.log 2>&1
+    - echo "MIGRATIONS COMPLETED" >> storage/logs/backend/deploy.log
 
     - php artisan queue:restart || true
-    - echo "QUEUE RESTARTED" >> deploy.log
+    - echo "QUEUE RESTARTED" >> storage/logs/backend/deploy.log
 
     - php artisan up || true
-    - echo "DEPLOY DONE" >> deploy.log
+    - echo "=== DEPLOYMENT COMPLETED ===" >> storage/logs/backend/deploy.log
+    - echo "Timestamp: $(date)" >> storage/logs/backend/deploy.log
 

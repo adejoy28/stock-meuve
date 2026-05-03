@@ -1,5 +1,8 @@
 name: Laravel Deploy
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   push:
     branches: [main]
@@ -64,15 +67,28 @@ jobs:
     steps:
       - name: Trigger cPanel Git deploy
         run: |
+          echo "=== DEPLOYMENT STARTED ===" 
+          echo "Timestamp: $(date)"
+          echo "Repository: adejoy28/stock-meuve"
+          echo "Branch: main"
+          echo "Target: /home/${{ secrets.CPANEL_USER }}/charlyhb"
+          echo ""
+          
           RESPONSE=$(curl -s -w "\n%{http_code}" \
             -H "Authorization: cpanel ${{ secrets.CPANEL_USER }}:${{ secrets.CPANEL_API_TOKEN }}" \
             "https://${{ secrets.CPANEL_HOST }}:2083/execute/VersionControl/update?repository_root=/home/${{ secrets.CPANEL_USER }}/charlyhb")
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
           BODY=$(echo "$RESPONSE" | head -n-1)
-          echo "Response body: $BODY"
-          echo "HTTP status: $HTTP_CODE"
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "Deploy failed"
+          
+          echo "cPanel API Response:"
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response Body: $BODY"
+          echo ""
+          
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "=== DEPLOYMENT SUCCESS ==="
+          else
+            echo "=== DEPLOYMENT FAILED ==="
             exit 1
           fi
 
