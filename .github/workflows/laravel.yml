@@ -67,41 +67,48 @@ jobs:
     steps:
       - name: Trigger cPanel Git deploy
         run: |
-          echo "=== DEPLOYMENT STARTED ===" 
+          echo "=== DEPLOYMENT STARTED ==="
           echo "Timestamp: $(date)"
           echo "Repository: adejoy28/stock-meuve"
           echo "Branch: main"
           echo "Target: /home/${{ secrets.CPANEL_USER }}/charlyhb"
           echo ""
-          
+
           RESPONSE=$(curl -s -w "\n%{http_code}" \
             -H "Authorization: cpanel ${{ secrets.CPANEL_USER }}:${{ secrets.CPANEL_API_TOKEN }}" \
             "https://${{ secrets.CPANEL_HOST }}:2083/execute/VersionControl/update?repository_root=/home/${{ secrets.CPANEL_USER }}/charlyhb")
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
           BODY=$(echo "$RESPONSE" | head -n-1)
-          
+
           echo "cPanel API Response:"
           echo "HTTP Status: $HTTP_CODE"
           echo "Response Body: $BODY"
           echo ""
-          
+
           if [ "$HTTP_CODE" = "200" ]; then
-            echo "=== DEPLOYMENT SUCCESS ==="
+            echo "=== DEPLOYMENT TRIGGERED SUCCESSFULLY ==="
           else
             echo "=== DEPLOYMENT FAILED ==="
             exit 1
           fi
 
+      - name: Wait for cPanel to run deploy script
+        run: |
+          echo "Giving cPanel 45s to run composer install and migrations..."
+          sleep 45
+
       - name: Poll until site is up
         run: |
+          echo "Checking https://charlyhbapi.${{ secrets.CPANEL_HOST }}/api/health"
           for i in {1..12}; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://charlyhbapi.${{ secrets.CPANEL_HOST }}/api/health || echo "000")
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              https://charlyhbapi.${{ secrets.CPANEL_HOST }}/api/health || echo "000")
             echo "Attempt $i: HTTP $STATUS"
             if [ "$STATUS" = "200" ]; then
-              echo "Site is up"
+              echo "✅ Site is up and healthy"
               exit 0
             fi
             sleep 10
           done
-          echo "WARNING: Health check timed out - deploy may still be running"
-        # Don't exit 1 here - the deploy was already triggered successfully
+          echo "⚠️  Health check timed out — deploy was triggered, site may still be warming up"
+          exit 0

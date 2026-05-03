@@ -58,3 +58,5 @@ Route::middleware(['auth:sanctum', 'throttle:120,1'])->group(function () {
     Route::get('export/movements', [\App\Http\Controllers\Api\ExportController::class, 'movements']);
     Route::get('export/products',  [\App\Http\Controllers\Api\ExportController::class, 'products']);
 });
+
+Route::get('/health', fn() => response()->json(['status' => 'ok']));
