@@ -1,3 +1,11 @@
 deployment:
   tasks:
-    - echo "HELLO DEPLOY"
+    - export DEPLOYPATH=/home/vjxzcyjr/charlyhb
+    - cd $DEPLOYPATH
+
+    - php artisan down || true
+
+    - php artisan config:clear
+    - php artisan cache:clear
+
+    - php artisan up || true
