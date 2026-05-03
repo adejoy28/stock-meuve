@@ -3,6 +3,10 @@ deployment:
     - export DEPLOYPATH=/home/vjxzcyjr/charlyhb
     - cd $DEPLOYPATH
 
+    # Clean any uncommitted changes
+    - git reset --hard HEAD
+    - git clean -fd
+
     - mkdir -p storage/logs/backend
     - echo "=== DEPLOYMENT STARTED ===" >> storage/logs/backend/deploy.log
     - echo "Timestamp: $(date)" >> storage/logs/backend/deploy.log
