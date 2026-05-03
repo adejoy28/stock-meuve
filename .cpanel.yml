@@ -11,17 +11,23 @@ deployment:
     - echo "COMPOSER INSTALLED" >> deploy.log
     - /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction
 
-    - php artisan config:clear >> deploy.log 2>&1
+    - echo "PHP VERSION" >> deploy.log
+    - php -v
+
+    - echo "KEY GENERATED" >> deploy.log
+    - php artisan key:generate
+
     - echo "CONFIG CLEARED" >> deploy.log
+    - php artisan config:clear >> deploy.log 2>&1
 
-    - php artisan cache:clear >> deploy.log 2>&1
     - echo "CACHE CLEARED" >> deploy.log
+    - php artisan cache:clear >> deploy.log 2>&1
 
-    - php artisan config:cache >> deploy.log 2>&1
     - echo "CONFIG CACHED" >> deploy.log
+    - php artisan config:cache >> deploy.log 2>&1
 
-    - php artisan route:cache >> deploy.log 2>&1
     - echo "ROUTES CACHED" >> deploy.log
+    - php artisan route:cache >> deploy.log 2>&1
     
     - php artisan migrate --force
     - echo "MIGRATED" >> deploy.log
