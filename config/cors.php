@@ -20,6 +20,7 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
+        'https://charlyhb.adebayosystems.com.ng',
         'https://stock-meuve-web.onrender.com',
         'http://localhost:3000',
         'capacitor://localhost',
