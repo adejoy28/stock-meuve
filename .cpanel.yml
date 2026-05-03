@@ -1,9 +1,9 @@
+---
 deployment:
   tasks:
     - export DEPLOYPATH=/home/vjxzcyjr/charlyhb
     - cd $DEPLOYPATH
 
-    # Clean any uncommitted changes
     - git reset --hard HEAD
     - git clean -fd
 
@@ -22,9 +22,6 @@ deployment:
     - echo "PHP VERSION" >> storage/logs/backend/deploy.log
     - php -v >> storage/logs/backend/deploy.log 2>&1
 
-    - echo "KEY GENERATED" >> storage/logs/backend/deploy.log
-    - php artisan key:generate >> storage/logs/backend/deploy.log 2>&1
-
     - echo "CONFIG CLEARED" >> storage/logs/backend/deploy.log
     - php artisan config:clear >> storage/logs/backend/deploy.log 2>&1
 
@@ -36,7 +33,7 @@ deployment:
 
     - echo "ROUTES CACHED" >> storage/logs/backend/deploy.log
     - php artisan route:cache >> storage/logs/backend/deploy.log 2>&1
-    
+
     - echo "RUNNING MIGRATIONS..." >> storage/logs/backend/deploy.log
     - php artisan migrate --force >> storage/logs/backend/deploy.log 2>&1
     - echo "MIGRATIONS COMPLETED" >> storage/logs/backend/deploy.log
@@ -47,4 +44,3 @@ deployment:
     - php artisan up || true
     - echo "=== DEPLOYMENT COMPLETED ===" >> storage/logs/backend/deploy.log
     - echo "Timestamp: $(date)" >> storage/logs/backend/deploy.log
-
