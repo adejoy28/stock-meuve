@@ -133,10 +133,10 @@ return [
     ],
 
     'extensions' => [
-        'afterOpenApiGenerated' => function (Dedoc\Scramble\Support\Generator\OpenApi $openApi) {
-            $openApi->secure(
-                Dedoc\Scramble\Support\Generator\SecurityScheme::http('bearer')
-            );
-        },
+        'afterOpenApiGenerated' => null // function (Dedoc\Scramble\Support\Generator\OpenApi $openApi) {
+        // $openApi->secure(
+        //         Dedoc\Scramble\Support\Generator\SecurityScheme::http('bearer')
+        //     );
+        // },
     ],
 ];
